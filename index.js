@@ -12,6 +12,7 @@ app.get("/", function (req, res) {
 });
 
 app.use("/tasks", require("./routes/tasks.routes.js"));
+app.use("/users", require("./routes/users.routes.js"));
 
 app.all("*", function (req, res) {
   res.status(404).json({ message: "WHAT???" });
