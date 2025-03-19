@@ -20,15 +20,10 @@ router.route("/login").post(usersController.login);
 
 router.route("/signup").post(usersController.createUser);
 
-router.route("/").get(authController.verifyToken, usersController.findAll);
+router.route("/users").get(authController.verifyToken, usersController.findAll);
 
 router
-  .route("/:userID")
-  .delete(authController.verifyToken, usersController.deleteUser)
-  .patch(authController.verifyToken, usersController.blockUser);
-
-router
-  .route("/edit/:userID")
+  .route("/users/:userID")
   .patch(authController.verifyToken, usersController.editProfile);
 
 module.exports = router;
