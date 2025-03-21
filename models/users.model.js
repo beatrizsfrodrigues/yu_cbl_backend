@@ -52,3 +52,4 @@ module.exports = (mongoose) => {
   const User = mongoose.model("users", schema);
   return User;
 };
+
