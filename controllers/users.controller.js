@@ -7,7 +7,6 @@ const User = db.users;
 exports.findAll = async (req, res) => {
   try {
     let users = await User.find().exec();
-    console.log("Users found: ", users); // Add this line to inspect the result
     res.status(200).json({ success: true, users: users });
   } catch (err) {
     res.status(500).json({
