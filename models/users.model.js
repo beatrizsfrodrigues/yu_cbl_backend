@@ -26,7 +26,8 @@ module.exports = (mongoose) => {
         required: true,
       },
       points: Number,
-      partnerId: mongoose.Schema.Types.ObjectId,
+      partnerId: String,
+      // partnerId: mongoose.Schema.Types.ObjectId,
       accessoriesOwned: {
         type: Array,
         default: [40],
@@ -52,4 +53,3 @@ module.exports = (mongoose) => {
   const User = mongoose.model("users", schema);
   return User;
 };
-
