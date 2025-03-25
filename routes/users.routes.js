@@ -16,14 +16,14 @@ router.use((req, res, next) => {
   next();
 });
 
-router.route("/login").post(usersController.login);
+// router.route("/login").post(usersController.login);
 
-router.route("/signup").post(usersController.createUser);
+// router.route("/signup").post(usersController.createUser);
 
-router.route("/users").get(authController.verifyToken, usersController.findAll);
+router.route("/").get(usersController.findAll);
 
-router
-  .route("/users/:userID")
-  .patch(authController.verifyToken, usersController.editProfile);
+// router
+//   .route("/users/:userID")
+//   .patch(authController.verifyToken, usersController.editProfile);
 
 module.exports = router;
