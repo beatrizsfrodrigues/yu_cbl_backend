@@ -16,9 +16,9 @@ router.use((req, res, next) => {
   next();
 });
 
-// router.route("/login").post(usersController.login);
+router.route("/login").post(usersController.login);
 
-// router.route("/signup").post(usersController.createUser);
+router.route("/signup").post(usersController.createUser);
 
 router.route("/").get(usersController.findAll);
 
