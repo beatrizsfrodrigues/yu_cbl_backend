@@ -16,8 +16,8 @@ router.use((req, res, next) => {
   next();
 });
 
-router.route("/tasks").post(tasksController.createTask);
+// router.route("/tasks").post(tasksController.createTask);
 
-router.route("/tasks").get(tasksController.getTasks);
+router.route("/").get(tasksController.getTasks);
 
 module.exports = router;

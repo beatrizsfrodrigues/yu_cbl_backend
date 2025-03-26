@@ -5,10 +5,17 @@ const config = {
   HOST: process.env.DB_HOST,
   SECRET: process.env.SECRET,
 };
-config.URL = `mongodb+srv://${config.USER}:${config.PASSWORD}@${config.HOST}/${config.DB}?retryWrites=true&w=majority`;
+
+// You can switch between the local connection and MongoDB Atlas depending on your environment
+if (process.env.NODE_ENV === "production") {
+  // MongoDB Atlas connection string
+  config.URL = `mongodb+srv://${config.USER}:${config.PASSWORD}@${config.HOST}/${config.DB}?retryWrites=true&w=majority`;
+} else {
+  // Local MongoDB connection string
+  config.URL = "mongodb://localhost:27017/YU";
+}
 
 module.exports = config;
-
 
 /*
 //ligacao para a local 
