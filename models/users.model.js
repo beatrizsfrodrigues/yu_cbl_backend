@@ -25,9 +25,14 @@ module.exports = (mongoose) => {
         allowNull: false,
         required: true,
       },
-      points: Number,
-      partnerId: String,
-      // partnerId: mongoose.Schema.Types.ObjectId,
+      points: {
+        type: Number,
+        default: 0,
+      },
+      partnerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: null,
+      },
       accessoriesOwned: {
         type: Array,
         default: [40],
@@ -46,7 +51,10 @@ module.exports = (mongoose) => {
         default:
           "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png",
       },
-      completedTasks: Array,
+      completedTasks: {
+        type: Array,
+        default: [],
+      },
     },
     { timestamps: false }
   );

@@ -41,7 +41,7 @@ exports.createUser = async (req, res) => {
       username,
       email,
       password: bcrypt.hashSync(req.body.password, 10),
-      code: "ola",
+      code: "olaa",
     });
 
     return res.status(201).json({
@@ -50,7 +50,6 @@ exports.createUser = async (req, res) => {
         _id: newUser._id,
         username: newUser.username,
         email: newUser.email,
-        points: newUser.points,
       },
     });
   } catch (error) {
