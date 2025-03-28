@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
-
+const authMiddleware = require("../middlewares/auth.middleware");
 const usersController = require("../controllers/users.controller");
-const authController = require("../controllers/auth.controller");
+//const authController = require("../controllers/auth.controller");
 
+/*
 router.use((req, res, next) => {
   const start = Date.now();
   res.on("finish", () => {
@@ -14,13 +15,20 @@ router.use((req, res, next) => {
     );
   });
   next();
-});
-
-router.route("/login").post(usersController.login);
+});    */
 
 router.route("/signup").post(usersController.createUser);
 
 router.route("/").get(usersController.findAll);
+
+router.post("/login", usersController.login);
+
+router.put("/connect-partner", authMiddleware, usersController.connectPartner);
+
+router.put("/:id", authMiddleware, usersController.updateUser);
+
+router.get("/partner", authMiddleware, usersController.getPartner);
+router.get("/me", authMiddleware, usersController.getLoggedInUser);
 
 // router
 //   .route("/users/:userID")

@@ -15,7 +15,7 @@ app.use("/tasks", require("./routes/tasks.routes.js"));
 app.use("/users", require("./routes/users.routes.js"));
 
 app.all("*", function (req, res) {
-  res.status(404).json({ message: "WHAT???" });
+  res.status(404).json({ message: "Endepoint not found" });
 });
 const server = app.listen(port, host, () =>
   console.log(`App listening at http://${host}:${port}/`)
