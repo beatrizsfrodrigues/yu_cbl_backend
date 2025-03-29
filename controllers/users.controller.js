@@ -16,7 +16,6 @@ exports.findAll = async (req, res) => {
     });
   }
 };
-
 exports.createUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -34,14 +33,24 @@ exports.createUser = async (req, res) => {
 
     const userUsername = await User.findOne({ username });
     if (userUsername) {
-      return res.status(400).json({ message: "O email já está em uso." });
+      return res.status(400).json({ message: "O nome de utilizador já está em uso." });
     }
+
+   
+    const generateRandomCode = (length) => {
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      let result = "";
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    };
 
     const newUser = await User.create({
       username,
       email,
-      password: bcrypt.hashSync(req.body.password, 10),
-      code: "olaa",
+      password: bcrypt.hashSync(password, 10),
+      code: generateRandomCode(5),
     });
 
     return res.status(201).json({
