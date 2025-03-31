@@ -4,7 +4,6 @@ module.exports = (mongoose) => {
       userId: {
         type: mongoose.Schema.Types.ObjectId,
         allowNull: false,
-        required: true,
       },
       title: {
         type: String,
@@ -21,14 +20,23 @@ module.exports = (mongoose) => {
         default: false,
         allowNull: false,
       },
-      completedDate: Number,
-      picture: String,
+      completedDate: {
+        type: Number,
+        default: 0,
+      },
+      picture: {
+        type: String,
+        default: "",
+      },
       verified: {
         type: Boolean,
         default: false,
         allowNull: false,
       },
-      rejectMessage: String,
+      rejectMessage: {
+        type: String,
+        default: "",
+      },
     },
     { timestamps: false }
   );
