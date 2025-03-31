@@ -1,19 +1,38 @@
-module.exports = (mongoose) => {
-  const schema = mongoose.Schema(
+
+const mongoose = require('mongoose');
+const { Schema } = mongoose;
+
+
+const messageSubSchema = new Schema({
+  senderId: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  receiverId: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  message: {
+    type: String,
+    default: ''
+  },
+  date: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+
+const messagesSchema = new Schema({
+  usersId: [
     {
-      usersId: {
-        type: Array,
-        allowNull: false,
-        required: true,
-      },
-      messages: {
-        type: Object,
-        allowNull: false,
-        required: true,
-      },
-    },
-    { timestamps: false }
-  );
-  const Message = mongoose.model("messages", schema);
-  return Message;
-};
+      type: Schema.Types.ObjectId,
+      ref: 'User'
+    }
+  ],
+  messages: [messageSubSchema]
+});
+
+module.exports = mongoose.model('Messages', messagesSchema);

@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 // const User = require("../models/userModel");
 const config = require("../config/db.config.js");
 const User = db.users;
+const Messages = require('../models/messages.model');
 
 exports.findAll = async (req, res) => {
   try {
@@ -156,11 +157,26 @@ exports.connectPartner = async (req, res) => {
     }
 
     user.partnerId = partnerUser._id;
-    const updatedUser = await user.save();
+    partnerUser.partnerId = user._id;
 
+    await user.save();
+    await partnerUser.save();
+    // Cria/Verifica se já existe uma conversa (Messages) entre esses 2 users
+    const existingConversation = await Messages.findOne({
+        usersId: { $all: [user._id, partnerUser._id] }
+    });
+  
+      // Se não existe, cria uma conversa vazia
+    if (!existingConversation) {
+        await Messages.create({
+          usersId: [user._id, partnerUser._id],
+          messages: []
+        });
+    }
+  
     return res.json({
-      message: 'Partner conectado com sucesso.',
-      user: updatedUser
+        message: 'Partner conectado com sucesso. Conversa criada (caso não existisse).',
+        user: user
     });
   } catch (error) {
     console.error(error);
