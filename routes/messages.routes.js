@@ -17,14 +17,10 @@ router.use((req, res, next) => {
 
 router
   .route("/:id")
-  .get(authMiddleware, messagesController.getConversation)
+  .get(authMiddleware, messagesController.getChat)
   .post(authMiddleware, messagesController.sendMessage);
 
-router.get(
-  "/user/:userId",
-  authMiddleware,
-  messagesController.getConversationsByUser
-);
+router.get("/user/:userId", authMiddleware, messagesController.getChatByUser);
 
 // router.post('/', authMiddleware, messagesController.createConversation);
 // router.post('/:id', authMiddleware, messagesController.addMessage);

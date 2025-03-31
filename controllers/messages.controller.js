@@ -35,19 +35,19 @@ exports.sendMessage = async (req, res) => {
 // [3] Retorna uma conversa pelo ID
 // ! so os users da conversa podem aceder a ela
 // ! adicionar mais erros
-exports.getConversation = async (req, res) => {
+exports.getChat = async (req, res) => {
   try {
     const { id } = req.params;
-    const conversation = await Message.findById(id);
+    const chat = await Message.findById(id);
     // .populate("usersId", "username email")
     // .populate("messages.senderId", "username email")
     // .populate("messages.receiverId", "username email");
 
-    if (!conversation) {
+    if (!chat) {
       return res.status(404).json({ message: "Conversa não encontrada." });
     }
 
-    return res.json(conversation);
+    return res.json(chat);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -56,17 +56,17 @@ exports.getConversation = async (req, res) => {
 // [4] Retorna todas as conversas de um user
 // ! so os users da conversa podem aceder a ela
 // ! adicionar mais erros
-exports.getConversationsByUser = async (req, res) => {
+exports.getChatByUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    const conversations = await Message.find({
+    const chat = await Message.find({
       usersId: userId,
     });
     // .populate("usersId", "username email")
     // .populate("messages.senderId", "username email")
     // .populate("messages.receiverId", "username email");
 
-    return res.json(conversations);
+    return res.json(chat);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -84,7 +84,7 @@ exports.createConversation = async (req, res) => {
     if (existing) {
       return res
         .status(400)
-        .json({ message: "Já existe uma conversa entre estes usuários." });
+        .json({ message: "Já existe uma conversa entre estes utilizadores." });
     }
 
     const conversation = await Message.create({
