@@ -3,6 +3,7 @@ module.exports = (mongoose) => {
     {
       userId: {
         type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
         allowNull: false,
       },
       title: {

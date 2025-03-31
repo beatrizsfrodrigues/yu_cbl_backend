@@ -1,14 +1,34 @@
-
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const messagesController = require('../controllers/messages.controller');
-const authMiddleware = require('../middlewares/auth.middleware');
 
-router.post('/create', authMiddleware, messagesController.createConversation);
-router.post('/:conversationId/messages', authMiddleware, messagesController.addMessage);
+const messagesController = require("../controllers/messages.controller");
+const authMiddleware = require("../middlewares/auth.middleware");
 
-router.get('/:conversationId', authMiddleware, messagesController.getConversationById);
+router.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    const diffSeconds = (Date.now() - start) / 1000;
+    console.log(
+      `${req.method} ${req.originalUrl} completed in ${diffSeconds} seconds`
+    );
+  });
+  next();
+});
 
-router.get('/user/:userId', authMiddleware, messagesController.getConversationsByUser);
+router
+  .route("/:id")
+  .get(authMiddleware, messagesController.getConversation)
+  .post(authMiddleware, messagesController.sendMessage);
+
+router.get(
+  "/user/:userId",
+  authMiddleware,
+  messagesController.getConversationsByUser
+);
+
+// router.post('/', authMiddleware, messagesController.createConversation);
+// router.post('/:id', authMiddleware, messagesController.addMessage);
+
+// router.get('/:conversationId', authMiddleware, messagesController.getConversationById);
 
 module.exports = router;
