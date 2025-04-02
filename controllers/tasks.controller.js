@@ -32,6 +32,7 @@ exports.getTasks = async (req, res) => {
   }
 };
 
+// ! mandar notificação
 exports.createTask = async (req, res) => {
   try {
     if (req.user) {
@@ -101,6 +102,7 @@ exports.getCompleteTasks = async (req, res) => {
   }
 };
 
+// ! mandar notificação
 exports.completeTask = async (req, res) => {
   try {
     if (req.user) {
@@ -145,6 +147,7 @@ exports.completeTask = async (req, res) => {
   }
 };
 
+// ! mandar notificação
 exports.verifyTask = async (req, res) => {
   try {
     if (req.user) {
