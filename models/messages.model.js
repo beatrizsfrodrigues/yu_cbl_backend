@@ -10,7 +10,15 @@ module.exports = (mongoose) => {
       messages: [
         {
           senderId: {
-            type: mongoose.Schema.Types.Mixed,
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: function () {
+              return this.senderType === "user";
+            },
+          },
+          senderType: {
+            type: String,
+            enum: ["user", "app"],
             required: true,
           },
           receiverId: {
@@ -26,6 +34,10 @@ module.exports = (mongoose) => {
             type: Number,
             required: true,
             default: getFormattedDate,
+          },
+          seen: {
+            type: Boolean,
+            default: false,
           },
         },
       ],

@@ -3,72 +3,163 @@ const Message = db.messages;
 const User = db.users;
 
 // [2] Adiciona mensagem a uma conversa existente
-// ! so os users da conversa podem mandar msg pra conversa
-// ! adicionar mais erros
 exports.sendMessage = async (req, res) => {
   try {
-    const { id } = req.params;
+    if (req.user) {
+      const { id } = req.params;
 
-    let loggedUser = await User.findOne({ _id: req.user.id }).exec();
+      let loggedUser = await User.findOne({ _id: req.user.id }).exec();
 
-    const { message } = req.body;
+      const { message } = req.body;
 
-    const conversation = await Message.findById(id);
-    if (!conversation) {
-      return res.status(404).json({ message: "Conversa não encontrada." });
+      const conversation = await Message.findById(id);
+
+      if (!conversation) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Conversa não encontrada." });
+      }
+
+      if (
+        conversation.usersId[0].toString() !== loggedUser._id.toString() &&
+        conversation.usersId[1].toString() !== loggedUser._id.toString()
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "Não tens permissão para enviar mensagens nesta conversa.",
+        });
+      }
+
+      if (
+        conversation.usersId[0].toString() !==
+          loggedUser.partnerId.toString() &&
+        conversation.usersId[1].toString() !== loggedUser.partnerId.toString()
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "Estás a enviar mensagem para o utilizador errado.",
+        });
+      }
+
+      // Adiciona a nova mensagem
+      conversation.messages.push({
+        senderId: loggedUser._id,
+        receiverId: loggedUser.partnerId,
+        senderType: "user",
+        message,
+      });
+
+      await conversation.save();
+
+      return res.status(201).json({
+        success: true,
+        msg: "Mensagem enviada com sucesso!",
+        conversation,
+      });
+    } else {
+      return res.status(403).json({
+        success: false,
+        msg: "Tens de ter um token para aceder a esta rota.",
+      });
     }
-
-    // Adiciona a nova mensagem
-    conversation.messages.push({
-      senderId: loggedUser._id,
-      receiverId: loggedUser.partnerId,
-      message,
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      msg: err.message || "Algum erro ocorreu ao enviar mensagem.",
     });
-
-    await conversation.save();
-    return res.json(conversation);
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
   }
 };
 
 // [3] Retorna uma conversa pelo ID
-// ! so os users da conversa podem aceder a ela
-// ! adicionar mais erros
 exports.getChat = async (req, res) => {
   try {
-    const { id } = req.params;
-    const chat = await Message.findById(id);
-    // .populate("usersId", "username email")
-    // .populate("messages.senderId", "username email")
-    // .populate("messages.receiverId", "username email");
+    if (req.user) {
+      const { id } = req.params;
 
-    if (!chat) {
-      return res.status(404).json({ message: "Conversa não encontrada." });
+      let loggedUser = await User.findOne({ _id: req.user.id }).exec();
+
+      const chat = await Message.findById(id);
+
+      if (!chat) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Conversa não encontrada." });
+      }
+
+      if (
+        chat.usersId[0].toString() !== loggedUser._id.toString() &&
+        chat.usersId[1].toString() !== loggedUser._id.toString()
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "Não tens permissão para ver esta conversa.",
+        });
+      }
+
+      // return res.json(chat);
+
+      return res.status(200).json({
+        success: true,
+        chat,
+      });
+    } else {
+      return res.status(403).json({
+        success: false,
+        msg: "Tens de ter um token para aceder a esta rota.",
+      });
     }
-
-    return res.json(chat);
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      msg: err.message || "Algum erro ocorreu ao encontrar a conversa.",
+    });
   }
 };
 
 // [4] Retorna todas as conversas de um user
-// ! so os users da conversa podem aceder a ela
-// ! adicionar mais erros
 exports.getChatByUser = async (req, res) => {
   try {
-    const { userId } = req.params;
-    const chat = await Message.find({
-      usersId: userId,
-    });
-    // .populate("usersId", "username email")
-    // .populate("messages.senderId", "username email")
-    // .populate("messages.receiverId", "username email");
+    if (req.user) {
+      const { userId } = req.params;
 
-    return res.json(chat);
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
+      let loggedUser = await User.findOne({ _id: req.user.id }).exec();
+
+      const chat = await Message.findOne({
+        usersId: userId,
+      });
+
+      if (!chat) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Conversa não encontrada." });
+      }
+
+      if (
+        chat.usersId[0].toString() !== userId.toString() &&
+        chat.usersId[1].toString() !== userId.toString() &&
+        loggedUser._id.toString() !== userId.toString()
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "Não tens permissão para ver esta conversa.",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        chat,
+      });
+    } else {
+      return res.status(403).json({
+        success: false,
+        msg: "Tens de ter um token para aceder a esta rota.",
+      });
+    }
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      msg: err.message || "Algum erro ocorreu ao encontrar a conversa.",
+    });
   }
 };
 
