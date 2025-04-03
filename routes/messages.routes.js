@@ -15,6 +15,18 @@ router.use((req, res, next) => {
   next();
 });
 
+router.get(
+  "/all",
+  authMiddleware,
+  (req, res, next) => {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Acesso negado. Somente administradores podem acessar essa rota.' });
+    }
+    next();
+  },
+  messagesController.getAllMessages
+);
+
 router
   .route("/:id")
   .get(authMiddleware, messagesController.getChat)

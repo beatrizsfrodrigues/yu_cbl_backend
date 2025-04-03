@@ -29,6 +29,10 @@ module.exports = (mongoose) => {
         type: Number,
         default: 0,
       },
+      role: { 
+        type: String, 
+        default: 'user'
+       } ,
       partnerId: {
         type: mongoose.Schema.Types.ObjectId,
         default: null,
@@ -58,6 +62,6 @@ module.exports = (mongoose) => {
     },
     { timestamps: false }
   );
-  const User = mongoose.model("users", schema);
+  const User = mongoose.model("User", schema);
   return User;
 };
