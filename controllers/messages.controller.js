@@ -1,7 +1,6 @@
 const db = require("../models");
 const Message = db.messages;
-const User = require("../models/user.model");
-
+const User = db.users;
 
 // [2] Adiciona mensagem a uma conversa existente
 exports.sendMessage = async (req, res) => {
@@ -194,25 +193,24 @@ exports.getAllMessages = async (req, res) => {
   try {
     const allMessages = await Message.find()
       .populate({
-        path: 'messages.senderId', 
-        select: 'username'  
+        path: "messages.senderId",
+        select: "username",
       })
       .exec();
 
-
     if (!allMessages || allMessages.length === 0) {
-      return res.status(404).json({ message: 'Nenhuma mensagem encontrada.' });
+      return res.status(404).json({ message: "Nenhuma mensagem encontrada." });
     }
 
     return res.status(200).json({
       success: true,
-      messages: allMessages,  // Retorna todas as mensagens com o username dos remetentes
+      messages: allMessages, // Retorna todas as mensagens com o username dos remetentes
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
       success: false,
-      message: error.message || 'Erro ao recuperar as mensagens.',
+      message: error.message || "Erro ao recuperar as mensagens.",
     });
   }
 };

@@ -20,16 +20,23 @@ router
   .get(authMiddleware, tasksController.getTasks)
   .post(authMiddleware, tasksController.createTask);
 
-router.route("/complete").get(authMiddleware, tasksController.getCompleteTasks);
+router
+  .route("/:id")
+  .delete(authMiddleware, tasksController.deleteTasks)
+  .put(authMiddleware, tasksController.editTasks);
 
 router
-  .route("/complete/:id")
+  .route("/:id/complete")
   .patch(authMiddleware, tasksController.completeTask);
 
-router.route("/verify/:id").patch(authMiddleware, tasksController.verifyTask);
+router.route("/:id/verify").patch(authMiddleware, tasksController.verifyTask);
 
 router
-  .route("/remove-reject-message/:id")
+  .route("/:id/remove-reject-message")
   .patch(authMiddleware, tasksController.removeRejectMessage);
+
+router
+  .route("/:id/notification")
+  .patch(authMiddleware, tasksController.notifyTasks);
 
 module.exports = router;
