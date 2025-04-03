@@ -23,8 +23,5 @@ router
 router.get("/user/:userId", authMiddleware, messagesController.getChatByUser);
 
 // router.post('/', authMiddleware, messagesController.createConversation);
-// router.post('/:id', authMiddleware, messagesController.addMessage);
-
-// router.get('/:conversationId', authMiddleware, messagesController.getConversationById);
 
 module.exports = router;

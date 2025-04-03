@@ -1,6 +1,7 @@
 const db = require("../models");
 const Task = db.tasks;
 const User = db.users;
+const Message = db.messages;
 
 exports.getTasks = async (req, res) => {
   try {
@@ -32,18 +33,22 @@ exports.getTasks = async (req, res) => {
   }
 };
 
-// ! mandar notificação
 exports.createTask = async (req, res) => {
   try {
     if (req.user) {
       let loggedUser = await User.findOne({ _id: req.user.id }).exec();
+
+      const chat = await Message.findOne({
+        usersId: req.user.id,
+      });
+
       if (loggedUser.partnerId) {
         const { title, description } = req.body;
 
         if (!title || !description) {
           return res.status(400).json({
             success: false,
-            msg: "Por favor preencha todos os campos obrigatórios.",
+            msg: "Por favor preenche todos os campos obrigatórios.",
           });
         }
 
@@ -52,6 +57,14 @@ exports.createTask = async (req, res) => {
           title,
           description,
         });
+
+        chat.messages.push({
+          receiverId: loggedUser.partnerId,
+          senderType: "app",
+          message: `Tarefa <b>${title}</b> foi criada.`,
+        });
+
+        await chat.save();
 
         return res.status(201).json({
           success: true,
@@ -102,13 +115,18 @@ exports.getCompleteTasks = async (req, res) => {
   }
 };
 
-// ! mandar notificação
 exports.completeTask = async (req, res) => {
   try {
     if (req.user) {
       const taskId = req.params.id;
 
       let task = await Task.findOne({ _id: taskId }).exec();
+
+      let loggedUser = await User.findOne({ _id: req.user.id }).exec();
+
+      const chat = await Message.findOne({
+        usersId: req.user.id,
+      });
 
       if (!task) {
         return res.status(404).json({
@@ -121,6 +139,14 @@ exports.completeTask = async (req, res) => {
         task.completed = true;
         task.picture = req.body.picture;
         await task.save();
+
+        chat.messages.push({
+          receiverId: loggedUser.partnerId,
+          senderType: "app",
+          message: `Tarefa <b>${task.title}</b> foi marcada como completa.`,
+        });
+
+        await chat.save();
 
         return res.status(200).json({
           success: true,
@@ -147,17 +173,22 @@ exports.completeTask = async (req, res) => {
   }
 };
 
-// ! mandar notificação
 exports.verifyTask = async (req, res) => {
   try {
     if (req.user) {
       const taskId = req.params.id;
+
       let loggedUser = await User.findOne({ _id: req.user.id }).exec();
+
       let partnerUser = await User.findOne({
         _id: loggedUser.partnerId,
       }).exec();
 
       let task = await Task.findOne({ _id: taskId }).exec();
+
+      const chat = await Message.findOne({
+        usersId: req.user.id,
+      });
 
       if (!task) {
         return res.status(404).json({
@@ -166,11 +197,15 @@ exports.verifyTask = async (req, res) => {
         });
       }
 
+      let notification;
+
       if (task.userId === loggedUser.partnerId) {
         if (req.body.verify == true) {
           task.completedDate = getFormattedDate();
           partnerUser.completedTasks.push(task.title);
+          task.verified = true;
           task.rejectMessage = "";
+          notification = "aceite.";
 
           await task.save();
           await partnerUser.save();
@@ -180,9 +215,18 @@ exports.verifyTask = async (req, res) => {
           task.completedDate = 0;
           task.rejectMessage = req.body.rejectMessage;
           task.picture = "";
+          notification = `rejeitada. Foi deixada esta mensagem: ${req.body.rejectMessage}`;
 
           await task.save();
         }
+
+        chat.messages.push({
+          receiverId: loggedUser.partnerId,
+          senderType: "app",
+          message: `Tarefa <b>${task.title}</b> foi ${notification}`,
+        });
+
+        await chat.save();
 
         return res.status(200).json({
           success: true,

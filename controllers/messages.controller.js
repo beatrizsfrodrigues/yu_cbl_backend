@@ -164,27 +164,27 @@ exports.getChatByUser = async (req, res) => {
 };
 
 // [1] Cria uma conversa vazia
-exports.createConversation = async (req, res) => {
-  try {
-    const { user1Id, user2Id } = req.body;
+// exports.createConversation = async (req, res) => {
+//   try {
+//     const { user1Id, user2Id } = req.body;
 
-    // Verifica se já existe conversa com estes 2 utilizadores
-    const existing = await Message.findOne({
-      usersId: { $all: [user1Id, user2Id] },
-    });
-    if (existing) {
-      return res
-        .status(400)
-        .json({ message: "Já existe uma conversa entre estes utilizadores." });
-    }
+//     // Verifica se já existe conversa com estes 2 utilizadores
+//     const existing = await Message.findOne({
+//       usersId: { $all: [user1Id, user2Id] },
+//     });
+//     if (existing) {
+//       return res
+//         .status(400)
+//         .json({ message: "Já existe uma conversa entre estes utilizadores." });
+//     }
 
-    const conversation = await Message.create({
-      usersId: [user1Id, user2Id],
-      messages: [],
-    });
+//     const conversation = await Message.create({
+//       usersId: [user1Id, user2Id],
+//       messages: [],
+//     });
 
-    return res.status(201).json(conversation);
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-};
+//     return res.status(201).json(conversation);
+//   } catch (error) {
+//     return res.status(500).json({ message: error.message });
+//   }
+// };
