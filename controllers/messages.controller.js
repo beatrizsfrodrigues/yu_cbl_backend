@@ -1,6 +1,6 @@
 const db = require("../models");
 const Message = db.messages;
-const User = require("../models/user.model");
+const User = db.users;
 
 // [2] Adiciona mensagem a uma conversa existente
 exports.sendMessage = async (req, res) => {

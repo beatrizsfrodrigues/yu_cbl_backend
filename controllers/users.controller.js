@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 // const User = require("../models/userModel");
 const config = require("../config/db.config.js");
 const User = db.users;
-const Messages = require('../models/messages.model');
+const Messages = db.messages;
 
 exports.findAll = async (req, res) => {
   try {
@@ -34,12 +34,14 @@ exports.createUser = async (req, res) => {
 
     const userUsername = await User.findOne({ username });
     if (userUsername) {
-      return res.status(400).json({ message: "O nome de utilizador já está em uso." });
+      return res
+        .status(400)
+        .json({ message: "O nome de utilizador já está em uso." });
     }
 
-   
     const generateRandomCode = (length) => {
-      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      const chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
       let result = "";
       for (let i = 0; i < length; i++) {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -52,7 +54,7 @@ exports.createUser = async (req, res) => {
       email,
       password: bcrypt.hashSync(password, 10),
       code: generateRandomCode(5),
-      role: 'user' 
+      role: "user",
     });
 
     return res.status(201).json({
@@ -61,7 +63,6 @@ exports.createUser = async (req, res) => {
         _id: newUser._id,
         username: newUser.username,
         email: newUser.email,
-        
       },
     });
   } catch (error) {
@@ -83,7 +84,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    
     const user = await User.findOne({
       $or: [{ email: emailOrUsername }, { username: emailOrUsername }],
     });
@@ -94,7 +94,6 @@ exports.login = async (req, res) => {
         .json({ message: "Email ou nome de utilizador incorreto." });
     }
 
- 
     const check = bcrypt.compareSync(password, user.password);
     if (!check) {
       return res.status(401).json({
@@ -104,8 +103,9 @@ exports.login = async (req, res) => {
       });
     }
 
-    
-    const token = jwt.sign({ id: user._id, role: user.role }, config.SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ id: user._id, role: user.role }, config.SECRET, {
+      expiresIn: "24h",
+    });
 
     return res.status(200).json({
       message: "Login efetuado com sucesso!",
@@ -119,7 +119,6 @@ exports.login = async (req, res) => {
       .json({ message: "Ocorreu um erro ao efetuar login.", error });
   }
 };
-
 
 // [2] Atualizar Utilizador pelo ID
 exports.updateUser = async (req, res) => {
@@ -141,21 +140,25 @@ exports.updateUser = async (req, res) => {
 exports.connectPartner = async (req, res) => {
   try {
     if (!req.user || !req.user.id) {
-      return res.status(401).json({ message: 'Utilizador não autenticado' });
+      return res.status(401).json({ message: "Utilizador não autenticado" });
     }
     const { code } = req.body;
     if (!code) {
-      return res.status(400).json({ message: 'É necessário informar o code.' });
+      return res.status(400).json({ message: "É necessário informar o code." });
     }
 
     const partnerUser = await User.findOne({ code });
     if (!partnerUser) {
-      return res.status(404).json({ message: 'Nenhum Utilizador encontrado com esse code.' });
+      return res
+        .status(404)
+        .json({ message: "Nenhum Utilizador encontrado com esse code." });
     }
 
     const user = await User.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({ message: 'Utilizador logado não encontrado.' });
+      return res
+        .status(404)
+        .json({ message: "Utilizador logado não encontrado." });
     }
 
     user.partnerId = partnerUser._id;
@@ -165,27 +168,27 @@ exports.connectPartner = async (req, res) => {
     await partnerUser.save();
     // Cria/Verifica se já existe uma conversa (Messages) entre esses 2 users
     const existingConversation = await Messages.findOne({
-        usersId: { $all: [user._id, partnerUser._id] }
+      usersId: { $all: [user._id, partnerUser._id] },
     });
-  
-      // Se não existe, cria uma conversa vazia
+
+    // Se não existe, cria uma conversa vazia
     if (!existingConversation) {
-        await Messages.create({
-          usersId: [user._id, partnerUser._id],
-          messages: []
-        });
+      await Messages.create({
+        usersId: [user._id, partnerUser._id],
+        messages: [],
+      });
     }
-  
+
     return res.json({
-        message: 'Partner conectado com sucesso. Conversa criada (caso não existisse).',
-        user: user
+      message:
+        "Partner conectado com sucesso. Conversa criada (caso não existisse).",
+      user: user,
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: error.message });
   }
 };
-
 
 exports.getPartner = async (req, res) => {
   try {
@@ -202,7 +205,9 @@ exports.getPartner = async (req, res) => {
 
     const partnerUser = await User.findById(loggedUser.partnerId);
     if (!partnerUser) {
-      return res.status(404).json({ message: "Utilizador parceiro não encontrado" });
+      return res
+        .status(404)
+        .json({ message: "Utilizador parceiro não encontrado" });
     }
 
     return res.json(partnerUser);
