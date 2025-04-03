@@ -52,6 +52,7 @@ exports.createUser = async (req, res) => {
       email,
       password: bcrypt.hashSync(password, 10),
       code: generateRandomCode(5),
+      role: 'user' 
     });
 
     return res.status(201).json({
@@ -60,6 +61,7 @@ exports.createUser = async (req, res) => {
         _id: newUser._id,
         username: newUser.username,
         email: newUser.email,
+        
       },
     });
   } catch (error) {
@@ -69,7 +71,6 @@ exports.createUser = async (req, res) => {
       .json({ message: "Ocorreu um erro ao registar o utilizador.", error });
   }
 };
-
 
 exports.login = async (req, res) => {
   try {
@@ -82,7 +83,7 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Busca Utilizador por email ou username
+    
     const user = await User.findOne({
       $or: [{ email: emailOrUsername }, { username: emailOrUsername }],
     });
@@ -93,7 +94,7 @@ exports.login = async (req, res) => {
         .json({ message: "Email ou nome de utilizador incorreto." });
     }
 
-    // Verifica senha
+ 
     const check = bcrypt.compareSync(password, user.password);
     if (!check) {
       return res.status(401).json({
@@ -103,8 +104,8 @@ exports.login = async (req, res) => {
       });
     }
 
-    const token = jwt.sign({ id: user._id }, config.SECRET, { expiresIn: '24h' });
-
+    
+    const token = jwt.sign({ id: user._id, role: user.role }, config.SECRET, { expiresIn: '24h' });
 
     return res.status(200).json({
       message: "Login efetuado com sucesso!",
@@ -118,6 +119,7 @@ exports.login = async (req, res) => {
       .json({ message: "Ocorreu um erro ao efetuar login.", error });
   }
 };
+
 
 // [2] Atualizar Utilizador pelo ID
 exports.updateUser = async (req, res) => {

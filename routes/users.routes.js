@@ -19,7 +19,15 @@ router.use((req, res, next) => {
 
 router.route("/signup").post(usersController.createUser);
 
-router.route("/").get(usersController.findAll);
+router.route("/")
+  .get(authMiddleware, (req, res, next) => {
+   
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Acesso negado. Somente administradores podem acessar essa rota.' });
+    }
+    next(); 
+  }, usersController.findAll);
+
 
 router.post("/login", usersController.login);
 
