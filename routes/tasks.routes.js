@@ -20,9 +20,6 @@ router
   .get(authMiddleware, tasksController.getTasks)
   .post(authMiddleware, tasksController.createTask);
 
-// router.route("/:userId")
-// .get(authMiddleware, tasksController.getAllTasks)
-
 router
   .route("/:id")
   .delete(authMiddleware, tasksController.deleteTasks)
@@ -38,8 +35,8 @@ router
   .route("/:id/remove-reject-message")
   .patch(authMiddleware, tasksController.removeRejectMessage);
 
-router.route("/:id/notify").patch(authMiddleware, tasksController.notifyTasks);
+router
+  .route("/:id/notification")
+  .patch(authMiddleware, tasksController.notifyTasks);
 
 module.exports = router;
-
-// router.route("/complete").get(authMiddleware, tasksController.getCompleteTasks);

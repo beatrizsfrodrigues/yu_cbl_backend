@@ -349,6 +349,13 @@ exports.removeRejectMessage = async (req, res) => {
         });
       }
 
+      if (task.userId !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          msg: "Não tens permissão para aceder a esta tarefa.",
+        });
+      }
+
       task.rejectMessage = "";
 
       await task.save();
