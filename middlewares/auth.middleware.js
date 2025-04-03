@@ -12,10 +12,17 @@ module.exports = (req, res, next) => {
     return res.status(401).json({ message: "Formato de token inválido." });
   }
 
-  // TODO: passar id e role para o req.user
   try {
     const decoded = jwt.verify(token, config.SECRET);
     req.user = decoded;
+
+    if (req.user.role !== "admin" && req.user.role !== "user") {
+      return res.status(403).json({
+        message:
+          "Acesso negado! Você não tem permissão para acessar esta rota.",
+      });
+    }
+
     return next();
   } catch (error) {
     return res.status(401).json({ message: "Token inválido." });

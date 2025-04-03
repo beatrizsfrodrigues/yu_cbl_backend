@@ -1,6 +1,6 @@
 const db = require("../models");
 const Message = db.messages;
-const User = db.users;
+const User = require("../models/user.model");
 
 // [2] Adiciona mensagem a uma conversa existente
 exports.sendMessage = async (req, res) => {
@@ -164,27 +164,53 @@ exports.getChatByUser = async (req, res) => {
 };
 
 // [1] Cria uma conversa vazia
-// exports.createConversation = async (req, res) => {
-//   try {
-//     const { user1Id, user2Id } = req.body;
+exports.createConversation = async (req, res) => {
+  try {
+    const { user1Id, user2Id } = req.body;
 
-//     // Verifica se já existe conversa com estes 2 utilizadores
-//     const existing = await Message.findOne({
-//       usersId: { $all: [user1Id, user2Id] },
-//     });
-//     if (existing) {
-//       return res
-//         .status(400)
-//         .json({ message: "Já existe uma conversa entre estes utilizadores." });
-//     }
+    // Verifica se já existe conversa com estes 2 utilizadores
+    const existing = await Message.findOne({
+      usersId: { $all: [user1Id, user2Id] },
+    });
+    if (existing) {
+      return res
+        .status(400)
+        .json({ message: "Já existe uma conversa entre estes utilizadores." });
+    }
 
-//     const conversation = await Message.create({
-//       usersId: [user1Id, user2Id],
-//       messages: [],
-//     });
+    const conversation = await Message.create({
+      usersId: [user1Id, user2Id],
+      messages: [],
+    });
 
-//     return res.status(201).json(conversation);
-//   } catch (error) {
-//     return res.status(500).json({ message: error.message });
-//   }
-// };
+    return res.status(201).json(conversation);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+// [5] Retorna todas as mensagens de todos os usuários (somente admin pode acessar)
+exports.getAllMessages = async (req, res) => {
+  try {
+    const allMessages = await Message.find()
+      .populate({
+        path: "messages.senderId",
+        select: "username",
+      })
+      .exec();
+
+    if (!allMessages || allMessages.length === 0) {
+      return res.status(404).json({ message: "Nenhuma mensagem encontrada." });
+    }
+
+    return res.status(200).json({
+      success: true,
+      messages: allMessages, // Retorna todas as mensagens com o username dos remetentes
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Erro ao recuperar as mensagens.",
+    });
+  }
+};
