@@ -262,10 +262,6 @@ exports.verifyTask = async (req, res) => {
 
       let loggedUser = await User.findOne({ _id: req.user.id }).exec();
 
-      let partnerUser = await User.findOne({
-        _id: loggedUser.partnerId,
-      }).exec();
-
       let task = await Task.findOne({ _id: taskId }).exec();
 
       const chat = await Message.findOne({
@@ -284,13 +280,11 @@ exports.verifyTask = async (req, res) => {
       if (task.userId === loggedUser.partnerId) {
         if (req.body.verify == true) {
           task.completedDate = getFormattedDate();
-          partnerUser.completedTasks.push(task.title);
           task.verified = true;
           task.rejectMessage = "";
           notification = "aceite.";
 
           await task.save();
-          await partnerUser.save();
         } else if (req.body.verify == false) {
           task.completed = false;
           task.verified = false;
@@ -388,6 +382,8 @@ exports.notifyTasks = async (req, res) => {
 
       let task = await Task.findOne({ _id: taskId }).exec();
 
+      let partner = await User.findOne({ _id: task.userId }).exec();
+
       if (!task) {
         return res.status(404).json({
           success: false,
@@ -395,7 +391,7 @@ exports.notifyTasks = async (req, res) => {
         });
       }
 
-      if (req.user.id !== task.userId) {
+      if (req.user.id !== partner.partnerId) {
         return res.status(403).json({
           success: false,
           msg: "Não tens permissão para aceder a esta tarefa.",
