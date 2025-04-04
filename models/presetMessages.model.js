@@ -4,10 +4,11 @@ module.exports = (mongoose) => {
       message: {
         type: String,
         allowNull: false,
+        required: true,
       },
     },
     { timestamps: false }
   );
-  const PresetMessage = mongoose.model("presetMessages", schema);
+  const PresetMessage = mongoose.model("preset-messages", schema);
   return PresetMessage;
 };
