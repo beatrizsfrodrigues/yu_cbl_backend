@@ -3,11 +3,31 @@ const Task = db.tasks;
 const User = db.users;
 const Message = db.messages;
 
-//* TODO: admin
 exports.getTasks = async (req, res) => {
   try {
     if (req.user) {
-      let query = req.user.role === "user" ? { userId: req.user.id } : {};
+      let query = {};
+      if (req.user.role === "user") {
+        let loggedUser = await User.findOne({ _id: req.user.id }).exec();
+        const allowedIds = [req.user.id];
+        if (loggedUser._id == req.user.id) {
+          if (loggedUser.partnerId) allowedIds.push(loggedUser.partnerId);
+        } else {
+          return res.status(403).json({
+            success: false,
+            msg: "Não tens permissão para ver tarefas deste utilizador.",
+          });
+        }
+
+        if (!requestedUserId || !allowedIds.includes(requestedUserId)) {
+          return res.status(403).json({
+            success: false,
+            msg: "Não tens permissão para ver tarefas deste utilizador.",
+          });
+        }
+
+        query.userId = requestedUserId;
+      }
 
       if (req.user.role === "admin" && req.query.userId) {
         query.userId = req.query.userId;
@@ -150,7 +170,6 @@ exports.completeTask = async (req, res) => {
   }
 };
 
-//* TODO: admin
 exports.deleteTasks = async (req, res) => {
   try {
     if (req.user) {
@@ -199,7 +218,6 @@ exports.deleteTasks = async (req, res) => {
   }
 };
 
-//* TODO: admin
 exports.editTasks = async (req, res) => {
   try {
     if (req.user) {
@@ -374,7 +392,6 @@ exports.removeRejectMessage = async (req, res) => {
   }
 };
 
-//* TODO: notifications
 exports.notifyTasks = async (req, res) => {
   try {
     if (req.user) {

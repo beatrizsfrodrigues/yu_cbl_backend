@@ -20,5 +20,6 @@ db.users = require("./users.model.js")(mongoose);
 db.tasks = require("./tasks.model.js")(mongoose);
 db.messages = require("./messages.model.js")(mongoose);
 db.presetMessages = require("./presetMessages.model.js")(mongoose);
+db.accessories = require("./accessories.model.js")(mongoose);
 
 module.exports = db;

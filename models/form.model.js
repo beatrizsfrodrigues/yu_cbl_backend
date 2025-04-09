@@ -1,13 +1,8 @@
 module.exports = (mongoose) => {
   const schema = mongoose.Schema(
     {
-      userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        allowNull: false,
-        required: true,
-      },
-      date: {
-        type: Number,
+      question: {
+        type: String,
         allowNull: false,
         required: true,
       },
@@ -19,6 +14,6 @@ module.exports = (mongoose) => {
     },
     { timestamps: false }
   );
-  const FormAnswer = mongoose.model("form-answers", schema);
-  return FormAnswer;
+  const Form = mongoose.model("form", schema);
+  return Form;
 };
