@@ -38,6 +38,11 @@ module.exports = (mongoose) => {
         type: String,
         default: "",
       },
+      notification: {
+        type: Boolean,
+        default: false,
+        allowNull: false,
+      },
     },
     { timestamps: false }
   );

@@ -1,23 +1,24 @@
 const db = require("../models");
 const Task = db.tasks;
 const User = db.users;
+const Message = db.messages;
 
+//* TODO: admin
 exports.getTasks = async (req, res) => {
   try {
     if (req.user) {
-      const query = { userId: req.user.id };
+      let query = req.user.role === "user" ? { userId: req.user.id } : {};
 
-      if (req.query.completed !== undefined) {
-        query.completed = req.query.completed === "true";
+      if (req.user.role === "admin" && req.query.userId) {
+        query.userId = req.query.userId;
       }
 
-      if (req.query.verified !== undefined) {
-        query.verified = req.query.verified === "true";
-      }
+      if (req.query.completed) query.completed = req.query.completed === "true";
+      if (req.query.verified) query.verified = req.query.verified === "true";
 
       let tasks = await Task.find(query).exec();
 
-      res.status(200).json({ success: true, tasks: tasks });
+      res.status(200).json({ success: true, tasks });
     } else {
       return res.status(403).json({
         success: false,
@@ -25,25 +26,29 @@ exports.getTasks = async (req, res) => {
       });
     }
   } catch (err) {
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       msg: err.message || "Algum erro ocorreu ao encontrar as tarefas.",
     });
   }
 };
 
-// ! mandar notificação
 exports.createTask = async (req, res) => {
   try {
     if (req.user) {
       let loggedUser = await User.findOne({ _id: req.user.id }).exec();
+
+      const chat = await Message.findOne({
+        usersId: req.user.id,
+      });
+
       if (loggedUser.partnerId) {
         const { title, description } = req.body;
 
         if (!title || !description) {
           return res.status(400).json({
             success: false,
-            msg: "Por favor preencha todos os campos obrigatórios.",
+            msg: "Por favor preenche todos os campos obrigatórios.",
           });
         }
 
@@ -52,6 +57,14 @@ exports.createTask = async (req, res) => {
           title,
           description,
         });
+
+        chat.messages.push({
+          receiverId: loggedUser.partnerId,
+          senderType: "app",
+          message: `Tarefa <b>${title}</b> foi criada.`,
+        });
+
+        await chat.save();
 
         return res.status(201).json({
           success: true,
@@ -78,37 +91,18 @@ exports.createTask = async (req, res) => {
   }
 };
 
-exports.getCompleteTasks = async (req, res) => {
-  try {
-    if (req.user) {
-      let loggedUser = await User.findOne({ _id: req.user.id }).exec();
-
-      return res.status(200).json({
-        success: true,
-        msg: "Tarefas encontradas com sucesso!",
-        completeTasks: loggedUser.completedTasks,
-      });
-    } else {
-      return res.status(403).json({
-        success: false,
-        msg: "Tens de ter um token para aceder a esta rota.",
-      });
-    }
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      msg: err.message || "Algum erro ocorreu ao criar a tarefa.",
-    });
-  }
-};
-
-// ! mandar notificação
 exports.completeTask = async (req, res) => {
   try {
     if (req.user) {
       const taskId = req.params.id;
 
       let task = await Task.findOne({ _id: taskId }).exec();
+
+      let loggedUser = await User.findOne({ _id: req.user.id }).exec();
+
+      const chat = await Message.findOne({
+        usersId: req.user.id,
+      });
 
       if (!task) {
         return res.status(404).json({
@@ -120,7 +114,16 @@ exports.completeTask = async (req, res) => {
       if (task.userId === req.user.id) {
         task.completed = true;
         task.picture = req.body.picture;
+        task.notification = true;
         await task.save();
+
+        chat.messages.push({
+          receiverId: loggedUser.partnerId,
+          senderType: "app",
+          message: `Tarefa <b>${task.title}</b> foi marcada como completa.`,
+        });
+
+        await chat.save();
 
         return res.status(200).json({
           success: true,
@@ -147,17 +150,123 @@ exports.completeTask = async (req, res) => {
   }
 };
 
-// ! mandar notificação
+//* TODO: admin
+exports.deleteTasks = async (req, res) => {
+  try {
+    if (req.user) {
+      if (req.user.role == "admin") {
+        const taskId = req.params.id;
+
+        let task = await Task.findOne({ _id: taskId }).exec();
+
+        if (!task) {
+          return res.status(404).json({
+            success: false,
+            msg: "Tarefa não encontrada.",
+          });
+        }
+
+        if (task.verified == true) {
+          return res.status(403).json({
+            success: false,
+            msg: "Não tens permissão para apagar esta tarefa.",
+          });
+        } else {
+          await Task.findByIdAndDelete(taskId);
+
+          return res.status(200).json({
+            success: true,
+            msg: "Tarefa apagada com sucesso.",
+          });
+        }
+      } else {
+        return res.status(403).json({
+          success: false,
+          msg: "Não tens permissão para aceder a esta rota.",
+        });
+      }
+    } else {
+      return res.status(403).json({
+        success: false,
+        msg: "Tens de ter um token para aceder a esta rota.",
+      });
+    }
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      msg: err.message || "Algum erro ocorreu ao apagar a tarefa.",
+    });
+  }
+};
+
+//* TODO: admin
+exports.editTasks = async (req, res) => {
+  try {
+    if (req.user) {
+      if (req.user.role == "admin") {
+        const taskId = req.params.id;
+
+        let task = await Task.findOne({ _id: taskId }).exec();
+
+        if (!task) {
+          return res.status(404).json({
+            success: false,
+            msg: "Tarefa não encontrada.",
+          });
+        }
+
+        if (task.completed == true) {
+          return res.status(403).json({
+            success: false,
+            msg: "Não tens permissão para editar esta tarefa.",
+          });
+        } else {
+          const { title, description } = req.body;
+
+          const updatedTask = await Task.findByIdAndUpdate(
+            taskId,
+            { title, description, completed, verified },
+            { new: true, runValidators: true }
+          );
+
+          return res.status(200).json({
+            success: true,
+            msg: "Tarefa apagada com sucesso.",
+            task: updatedTask,
+          });
+        }
+      } else {
+        return res.status(403).json({
+          success: false,
+          msg: "Não tens permissão para aceder a esta rota.",
+        });
+      }
+    } else {
+      return res.status(403).json({
+        success: false,
+        msg: "Tens de ter um token para aceder a esta rota.",
+      });
+    }
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      msg: err.message || "Algum erro ocorreu ao editar a tarefa.",
+    });
+  }
+};
+
 exports.verifyTask = async (req, res) => {
   try {
     if (req.user) {
       const taskId = req.params.id;
+
       let loggedUser = await User.findOne({ _id: req.user.id }).exec();
-      let partnerUser = await User.findOne({
-        _id: loggedUser.partnerId,
-      }).exec();
 
       let task = await Task.findOne({ _id: taskId }).exec();
+
+      const chat = await Message.findOne({
+        usersId: req.user.id,
+      });
 
       if (!task) {
         return res.status(404).json({
@@ -166,23 +275,34 @@ exports.verifyTask = async (req, res) => {
         });
       }
 
+      let notification;
+
       if (task.userId === loggedUser.partnerId) {
         if (req.body.verify == true) {
           task.completedDate = getFormattedDate();
-          partnerUser.completedTasks.push(task.title);
+          task.verified = true;
           task.rejectMessage = "";
+          notification = "aceite.";
 
           await task.save();
-          await partnerUser.save();
         } else if (req.body.verify == false) {
           task.completed = false;
           task.verified = false;
           task.completedDate = 0;
           task.rejectMessage = req.body.rejectMessage;
           task.picture = "";
+          notification = `rejeitada. Foi deixada esta mensagem: ${req.body.rejectMessage}`;
 
           await task.save();
         }
+
+        chat.messages.push({
+          receiverId: loggedUser.partnerId,
+          senderType: "app",
+          message: `Tarefa <b>${task.title}</b> foi ${notification}`,
+        });
+
+        await chat.save();
 
         return res.status(200).json({
           success: true,
@@ -223,6 +343,13 @@ exports.removeRejectMessage = async (req, res) => {
         });
       }
 
+      if (task.userId !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          msg: "Não tens permissão para aceder a esta tarefa.",
+        });
+      }
+
       task.rejectMessage = "";
 
       await task.save();
@@ -243,6 +370,52 @@ exports.removeRejectMessage = async (req, res) => {
       success: false,
       msg:
         err.message || "Algum erro ocorreu ao eliminar a mensagem da tarefa.",
+    });
+  }
+};
+
+//* TODO: notifications
+exports.notifyTasks = async (req, res) => {
+  try {
+    if (req.user) {
+      const taskId = req.params.id;
+
+      let task = await Task.findOne({ _id: taskId }).exec();
+
+      let partner = await User.findOne({ _id: task.userId }).exec();
+
+      if (!task) {
+        return res.status(404).json({
+          success: false,
+          msg: "Tarefa não encontrada.",
+        });
+      }
+
+      if (req.user.id !== partner.partnerId) {
+        return res.status(403).json({
+          success: false,
+          msg: "Não tens permissão para aceder a esta tarefa.",
+        });
+      } else {
+        task.notification = false;
+        await task.save();
+
+        return res.status(200).json({
+          success: true,
+          msg: "Notificação removida com sucesso!",
+          task,
+        });
+      }
+    } else {
+      return res.status(403).json({
+        success: false,
+        msg: "Tens de ter um token para aceder a esta rota.",
+      });
+    }
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      msg: err.message || "Algum erro ocorreu ao encontrar as tarefas.",
     });
   }
 };
