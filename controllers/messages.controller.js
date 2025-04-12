@@ -1,5 +1,7 @@
 const db = require("../models");
 const Message = db.messages;
+
+
 const User = db.users;
 
 // [2] Adiciona mensagem a uma conversa existente

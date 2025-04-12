@@ -38,6 +38,14 @@ router.put("/:id", authMiddleware, usersController.updateUser);
 router.get("/partner", authMiddleware, usersController.getPartner);
 router.get("/me", authMiddleware, usersController.getLoggedInUser);
 
+router.get('/accessories', authMiddleware, usersController.getUserAccessories);
+
+router.post('/accessories', authMiddleware, usersController.buyAccessory);
+
+router.delete('/:id', authMiddleware, usersController.deleteUser);
+
+router.get('/stats/users', authMiddleware, usersController.getUserStats);
+
 // router
 //   .route("/users/:userID")
 //   .patch(authController.verifyToken, usersController.editProfile);
