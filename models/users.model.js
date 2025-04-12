@@ -38,8 +38,17 @@ module.exports = (mongoose) => {
         default: null,
       },
       accessoriesOwned: {
-        type: Array,
-        default: [40],
+        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Accessory' }],
+        default: []
+      },
+      accessoriesEquipped: {
+        type: Object,
+        default: {
+          hat: null,
+          shirt: null,
+          color: 40,
+          background: null,
+        },
       },
       accessoriesEquipped: {
         type: Object,
