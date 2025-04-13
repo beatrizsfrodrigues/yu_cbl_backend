@@ -8,17 +8,24 @@ module.exports = (mongoose) => {
       },
       date: {
         type: Number,
-        allowNull: false,
         required: true,
+        default: 0,
       },
-      answers: {
-        type: Array,
-        allowNull: false,
-        required: true,
-      },
+      answers: [
+        {
+          question: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
+          },
+          answer: {
+            type: String,
+            required: true,
+          },
+        },
+      ],
     },
     { timestamps: false }
   );
-  const FormAnswer = mongoose.model("formAnswers", schema);
+  const FormAnswer = mongoose.model("form-answers", schema);
   return FormAnswer;
 };
