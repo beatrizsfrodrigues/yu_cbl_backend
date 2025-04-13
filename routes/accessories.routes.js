@@ -24,4 +24,8 @@ router
   .route("/:id")
   .delete(authMiddleware, accessoriesController.deleteAccessory);
 
+router.get("/", accessoriesController.findAll);
+
+router.get("/stats", authMiddleware, accessoriesController.getAccessoriesStats);
+
 module.exports = router;
