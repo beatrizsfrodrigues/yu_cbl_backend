@@ -11,9 +11,14 @@ module.exports = (mongoose) => {
         allowNull: false,
         required: true,
       },
+      active: {
+        type: Boolean,
+        allowNull: false,
+        default: true,
+      },
     },
     { timestamps: false }
   );
-  const Form = mongoose.model("form", schema);
+  const Form = mongoose.model("forms", schema);
   return Form;
 };

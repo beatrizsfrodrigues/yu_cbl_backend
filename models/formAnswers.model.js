@@ -8,14 +8,21 @@ module.exports = (mongoose) => {
       },
       date: {
         type: Number,
-        allowNull: false,
         required: true,
+        default: 0,
       },
-      answers: {
-        type: Array,
-        allowNull: false,
-        required: true,
-      },
+      answers: [
+        {
+          question: {
+            type: String,
+            required: true,
+          },
+          answer: {
+            type: String,
+            required: true,
+          },
+        },
+      ],
     },
     { timestamps: false }
   );

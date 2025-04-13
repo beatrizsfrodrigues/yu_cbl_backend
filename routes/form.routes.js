@@ -17,8 +17,9 @@ router.use((req, res, next) => {
 
 router
   .route("/")
-  .get(authMiddleware, formController.getForm)
-  .post(authMiddleware, formController.createQuestion)
-  .delete(authMiddleware, formController.deleteQuestion);
+  .get(formController.getForm)
+  .post(authMiddleware, formController.createQuestion);
+
+router.route("/:id").patch(authMiddleware, formController.activeQuestion);
 
 module.exports = router;
