@@ -14,7 +14,7 @@ module.exports = (mongoose) => {
       answers: [
         {
           question: {
-            type: String,
+            type: mongoose.Schema.Types.ObjectId,
             required: true,
           },
           answer: {

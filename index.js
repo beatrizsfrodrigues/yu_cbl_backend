@@ -17,7 +17,7 @@ app.use("/messages", require("./routes/messages.routes.js"));
 app.use("/preset-messages", require("./routes/presetMessages.routes.js"));
 app.use("/accessories", require("./routes/accessories.routes.js"));
 app.use("/forms", require("./routes/form.routes.js"));
-app.use("/formAnswers", require("./routes/formAnswers.routes.js"));
+app.use("/form-answers", require("./routes/formAnswers.routes.js"));
 
 app.all("*", function (req, res) {
   res.status(404).json({ message: "Endepoint not found" });
