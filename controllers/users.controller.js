@@ -198,13 +198,22 @@ exports.connectPartner = async (req, res) => {
     });
 
     // Se não existir, cria uma nova conversa
-    if (!existingConversation) {
+   /*if (!existingConversation) {
       await Messages.create({
         usersId: [user._id, partnerUser._id],
         messages: []
 
       usersId: { $all: [user._id, partnerUser._id] },
-    });
+    });*/
+
+    // Se não existir, cria uma nova conversa
+    if (!existingConversation) {
+      await Messages.create({
+        usersId: [user._id, partnerUser._id],
+        messages: []
+      });
+    }
+
 
  
 
@@ -269,12 +278,12 @@ exports.getUserAccessories = async (req, res) => {
 
 
     if (!user) {
-      return res.status(404).json({ message: "Usuário não encontrado." });
+      return res.status(404).json({ message: "Utilizador não encontrado." });
     }
 
     return res.json(user.accessoriesOwned);
   } catch (error) {
-    console.error("Erro ao buscar acessórios:", error);
+    console.error("Erro ao procurar acessórios:", error);
     return res.status(500).json({ message: "Erro ao buscar acessórios", error });
   }
 };
@@ -292,7 +301,7 @@ exports.buyAccessory = async (req, res) => {
 
     const user = await User.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({ message: "Usuário não encontrado." });
+      return res.status(404).json({ message: "Utilizar não encontrado." });
     }
 
     if (!user.accessoriesOwned) {
