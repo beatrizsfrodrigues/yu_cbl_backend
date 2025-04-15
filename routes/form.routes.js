@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const accessoriesController = require("../controllers/accessories.controller");
+const formController = require("../controllers/form.controller");
 const authMiddleware = require("../middlewares/auth.middleware");
 
 router.use((req, res, next) => {
@@ -17,15 +17,9 @@ router.use((req, res, next) => {
 
 router
   .route("/")
-  .get(accessoriesController.getAccessories)
-  .post(authMiddleware, accessoriesController.addAccessory);
+  .get(formController.getForm)
+  .post(authMiddleware, formController.createQuestion);
 
-router
-  .route("/:id")
-  .delete(authMiddleware, accessoriesController.deleteAccessory);
-
-router.get("/", accessoriesController.findAll);
-
-router.get("/stats", authMiddleware, accessoriesController.getAccessoriesStats);
+router.route("/:id").patch(authMiddleware, formController.activeQuestion);
 
 module.exports = router;
