@@ -153,7 +153,7 @@ exports.deleteAccessory = async (req, res) => {
 
 exports.findAll = async (req, res) => {
   try {
-    let accessories = await Accessory.find().exec();
+    let accessories = await Accessories.find().exec();
     res.status(200).json({ success: true, accessories: accessories });
   } catch (err) {
     res.status(500).json({
@@ -165,14 +165,12 @@ exports.findAll = async (req, res) => {
 
 exports.getAccessoriesStats = async (req, res) => {
   try {
-    const totalAccessories = await Accessory.countDocuments();
+    const totalAccessories = await Accessories.countDocuments();
     return res.status(200).json({ totalAccessories });
   } catch (error) {
-    return res
-      .status(500)
-      .json({
-        message: "Erro ao obter as estatísticas dos acessórios.",
-        error,
-      });
+    return res.status(500).json({
+      message: "Erro ao obter as estatísticas dos acessórios.",
+      error,
+    });
   }
 };
