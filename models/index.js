@@ -23,6 +23,9 @@ db.messages = require("./messages.model.js")(mongoose);
 db.accessories = require("./accessories.model.js")(mongoose);
 
 db.presetMessages = require("./presetMessages.model.js")(mongoose);
+db.accessories = require("./accessories.model.js")(mongoose);
+db.form = require("./form.model.js")(mongoose);
+db.formAnswers = require("./formAnswers.model.js")(mongoose);
 
 
 module.exports = db;
