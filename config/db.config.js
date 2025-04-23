@@ -9,7 +9,7 @@ const config = {
 // You can switch between the local connection and MongoDB Atlas depending on your environment
 if (process.env.NODE_ENV === "production") {
   // MongoDB Atlas connection string
-  config.URL = `mongodb+srv://${config.USER}:${config.PASSWORD}@${config.HOST}/${config.DB}?retryWrites=true&w=majority`;
+  config.URL = `mongodb+srv://${config.USER}:${config.PASSWORD}@${config.HOST}.st7hx.mongodb.net/${config.DB}?retryWrites=true&w=majority`;
 } else {
   // Local MongoDB connection string
   config.URL = "mongodb://localhost:27017/YU";
