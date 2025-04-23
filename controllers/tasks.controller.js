@@ -12,14 +12,14 @@ exports.getTasks = async (req, res) => {
 
         const allowedIds = [loggedUser.id, loggedUser.partnerId];
 
-        if (!requestedUserId || !allowedIds.includes(requestedUserId)) {
+        if (!req.user.id || !allowedIds.includes(req.user.id)) {
           return res.status(403).json({
             success: false,
             msg: "Não tens permissão para ver tarefas deste utilizador.",
           });
         }
 
-        query.userId = requestedUserId;
+        query.userId = req.user.id;
       }
 
       if (req.user.role === "admin" && req.query.userId) {
