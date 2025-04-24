@@ -10,7 +10,10 @@ exports.getTasks = async (req, res) => {
       if (req.user.role === "user") {
         let loggedUser = await User.findOne({ _id: req.user.id }).exec();
 
-        const allowedIds = [loggedUser.id, loggedUser.partnerId];
+        const allowedIds = [loggedUser.id];
+        if (loggedUser.partnerId) {
+          allowedIds.push(loggedUser.partnerId);
+        }
 
         if (!req.user.id || !allowedIds.includes(req.user.id)) {
           return res.status(403).json({
@@ -57,6 +60,7 @@ exports.createTask = async (req, res) => {
 
       if (loggedUser.partnerId) {
         const { title, description } = req.body;
+        console.log(req.body);
 
         if (!title || !description) {
           return res.status(400).json({
@@ -97,6 +101,7 @@ exports.createTask = async (req, res) => {
       });
     }
   } catch (err) {
+    console.log(err);
     return res.status(500).json({
       success: false,
       msg: err.message || "Algum erro ocorreu ao criar a tarefa.",
