@@ -5,9 +5,8 @@ const jwt = require("jsonwebtoken");
 const config = require("../config/db.config.js");
 const User = db.users;
 
-const Messages = require('../models/messages.model');
+const Messages = require("../models/messages.model");
 const Accessory = db.accessories;
-
 
 exports.findAll = async (req, res) => {
   try {
@@ -93,7 +92,7 @@ exports.login = async (req, res) => {
 
     if (!user) {
       return res
-        .status(400)
+        .status(401)
         .json({ message: "Email ou nome de utilizador está incorreto." });
     }
 
@@ -123,7 +122,6 @@ exports.login = async (req, res) => {
   }
 };
 
-
 exports.updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
@@ -136,11 +134,10 @@ exports.updateUser = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
       new: true,
     });
-    
+
     if (!updatedUser) {
       return res.status(404).json({ message: "Utilizador não encontrado" });
     }
-
 
     return res.json(updatedUser);
   } catch (error) {
@@ -159,7 +156,6 @@ exports.connectPartner = async (req, res) => {
     const { code } = req.body;
     if (!code) {
       return res.status(400).json({ message: "É necessário informar o code." });
-
     }
 
     // Procura o parceiro com o código fornecido
@@ -168,7 +164,6 @@ exports.connectPartner = async (req, res) => {
       return res
         .status(404)
         .json({ message: "Nenhum Utilizador encontrado com esse code." });
-
     }
 
     // Procura o utilizador autenticado
@@ -181,7 +176,9 @@ exports.connectPartner = async (req, res) => {
 
     // Verifica se algum dos utilizadores já tem parceiro
     if (user.partnerId || partnerUser.partnerId) {
-      return res.status(400).json({ message: 'Um dos utilizadores já tem parceiro atribuído.' });
+      return res
+        .status(400)
+        .json({ message: "Um dos utilizadores já tem parceiro atribuído." });
     }
 
     // Atribui o parceiro a ambos os utilizadores
@@ -193,12 +190,11 @@ exports.connectPartner = async (req, res) => {
 
     // Verifica se já existe conversa entre os dois utilizadores
     const existingConversation = await Messages.findOne({
-
-      usersId: { $all: [user._id, partnerUser._id] }
+      usersId: { $all: [user._id, partnerUser._id] },
     });
 
     // Se não existir, cria uma nova conversa
-   /*if (!existingConversation) {
+    /*if (!existingConversation) {
       await Messages.create({
         usersId: [user._id, partnerUser._id],
         messages: []
@@ -210,20 +206,15 @@ exports.connectPartner = async (req, res) => {
     if (!existingConversation) {
       await Messages.create({
         usersId: [user._id, partnerUser._id],
-        messages: []
+        messages: [],
       });
     }
-
-
- 
 
     return res.json({
       message:
         "Partner conectado com sucesso. Conversa criada (caso não existisse).",
       user: user,
-
     });
-
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: error.message });
@@ -269,13 +260,11 @@ exports.getLoggedInUser = async (req, res) => {
 };
 exports.getUserAccessories = async (req, res) => {
   try {
-    
     if (!req.user || !req.user.id) {
-      return res.status(401).json({ message: 'Utilizador não autenticado' });
+      return res.status(401).json({ message: "Utilizador não autenticado" });
     }
 
-    const user = await User.findById(req.user.id).populate('accessoriesOwned');
-
+    const user = await User.findById(req.user.id).populate("accessoriesOwned");
 
     if (!user) {
       return res.status(404).json({ message: "Utilizador não encontrado." });
@@ -284,14 +273,18 @@ exports.getUserAccessories = async (req, res) => {
     return res.json(user.accessoriesOwned);
   } catch (error) {
     console.error("Erro ao procurar acessórios:", error);
-    return res.status(500).json({ message: "Erro ao buscar acessórios", error });
+    return res
+      .status(500)
+      .json({ message: "Erro ao buscar acessórios", error });
   }
 };
 exports.buyAccessory = async (req, res) => {
   try {
     const { accessoryId } = req.body;
     if (!accessoryId) {
-      return res.status(400).json({ message: "O ID do acessório é obrigatório." });
+      return res
+        .status(400)
+        .json({ message: "O ID do acessório é obrigatório." });
     }
 
     const accessory = await Accessory.findById(accessoryId);
@@ -313,16 +306,19 @@ exports.buyAccessory = async (req, res) => {
 
     user.accessoriesOwned.push(accessoryId);
     await user.save();
-    await user.populate('accessoriesOwned');
+    await user.populate("accessoriesOwned");
 
-    return res.json({ message: "Acessório adquirido com sucesso.", accessories: user.accessoriesOwned });
+    return res.json({
+      message: "Acessório adquirido com sucesso.",
+      accessories: user.accessoriesOwned,
+    });
   } catch (error) {
     console.error("Erro ao adquirir acessório:", error);
-    return res.status(500).json({ message: "Erro ao adquirir acessório", error });
+    return res
+      .status(500)
+      .json({ message: "Erro ao adquirir acessório", error });
   }
 };
-
-
 
 exports.deleteUser = async (req, res) => {
   try {
@@ -330,18 +326,23 @@ exports.deleteUser = async (req, res) => {
     if (!userToDelete) {
       return res.status(404).json({ message: "Utilizador não encontrado." });
     }
-    return res.status(200).json({ message: "Utilizador eliminado com sucesso." });
+    return res
+      .status(200)
+      .json({ message: "Utilizador eliminado com sucesso." });
   } catch (error) {
-    return res.status(500).json({ message: "Erro ao eliminar o utilizador.", error });
+    return res
+      .status(500)
+      .json({ message: "Erro ao eliminar o utilizador.", error });
   }
 };
-
 
 exports.getUserStats = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     return res.status(200).json({ totalUsers });
   } catch (error) {
-    return res.status(500).json({ message: "Erro ao obter as estatísticas.", error });
+    return res
+      .status(500)
+      .json({ message: "Erro ao obter as estatísticas.", error });
   }
 };
