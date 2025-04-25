@@ -40,7 +40,7 @@ module.exports = (mongoose) => {
       },
       notification: {
         type: Boolean,
-        default: false,
+        default: true,
         allowNull: false,
       },
     },
