@@ -21,8 +21,11 @@ exports.getTasks = async (req, res) => {
             msg: "Não tens permissão para ver tarefas deste utilizador.",
           });
         }
-
-        query.userId = req.user.id;
+        if (!req.query.userId) {
+          query.userId = req.user.id;
+        } else {
+          query.userId = req.query.userId;
+        }
       }
 
       if (req.user.role === "admin" && req.query.userId) {
@@ -33,6 +36,7 @@ exports.getTasks = async (req, res) => {
       if (req.query.verified) query.verified = req.query.verified === "true";
 
       let tasks = await Task.find(query).exec();
+      console.log(tasks);
 
       res.status(200).json({ success: true, tasks });
     } else {
@@ -129,7 +133,7 @@ exports.completeTask = async (req, res) => {
         });
       }
 
-      if (task.userId === req.user.id) {
+      if (task.userId.toString() === req.user.id) {
         task.completed = true;
         task.picture = req.body.picture;
         task.notification = true;
@@ -293,7 +297,7 @@ exports.verifyTask = async (req, res) => {
 
       let notification;
 
-      if (task.userId === loggedUser.partnerId) {
+      if (task.userId.toString() === loggedUser.partnerId.toString()) {
         if (req.body.verify == true) {
           task.completedDate = getFormattedDate();
           task.verified = true;
@@ -406,7 +410,7 @@ exports.notifyTasks = async (req, res) => {
         });
       }
 
-      if (req.user.id !== partner.partnerId) {
+      if (req.user.id.toString() !== partner.partnerId.toString()) {
         return res.status(403).json({
           success: false,
           msg: "Não tens permissão para aceder a esta tarefa.",
