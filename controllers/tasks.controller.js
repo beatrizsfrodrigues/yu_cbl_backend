@@ -36,7 +36,6 @@ exports.getTasks = async (req, res) => {
       if (req.query.verified) query.verified = req.query.verified === "true";
 
       let tasks = await Task.find(query).exec();
-      console.log(tasks);
 
       res.status(200).json({ success: true, tasks });
     } else {
@@ -351,6 +350,8 @@ exports.verifyTask = async (req, res) => {
 
 exports.removeRejectMessage = async (req, res) => {
   try {
+    console.log(req.params.id);
+    console.log(req.user);
     if (req.user) {
       const taskId = req.params.id;
 
@@ -363,7 +364,7 @@ exports.removeRejectMessage = async (req, res) => {
         });
       }
 
-      if (task.userId !== req.user.id) {
+      if (task.userId.toString() !== req.user.id.toString()) {
         return res.status(403).json({
           success: false,
           msg: "Não tens permissão para aceder a esta tarefa.",
