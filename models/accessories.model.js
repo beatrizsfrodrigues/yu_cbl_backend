@@ -18,6 +18,6 @@ module.exports = (mongoose) => {
     },
     { timestamps: false }
   );
-  const Accessories = mongoose.model("accessories", schema);
+  const Accessories = mongoose.model("Accessory", schema);
   return Accessories;
 };
