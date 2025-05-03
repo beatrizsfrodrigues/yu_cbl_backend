@@ -42,6 +42,11 @@ router.get('/accessories', authMiddleware, usersController.getUserAccessories);
 
 router.post('/accessories', authMiddleware, usersController.buyAccessory);
 
+router.put('/accessories/equip',authMiddleware,usersController.equipAccessory);
+
+router.get( "/accessories-equipped",authMiddleware,usersController.getEquippedAccessories);
+
+
 router.delete('/:id', authMiddleware, usersController.deleteUser);
 
 router.get('/stats/users', authMiddleware, usersController.getUserStats);

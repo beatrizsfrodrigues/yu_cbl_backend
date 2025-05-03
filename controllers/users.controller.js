@@ -322,6 +322,110 @@ exports.buyAccessory = async (req, res) => {
   }
 };
 
+exports.equipAccessory = async (req, res) => {
+  try {
+    const { accessoryId } = req.body;
+    if (!accessoryId) {
+      return res.status(400).json({ message: "O ID do acessório é obrigatório." });
+    }
+
+    
+    const accessory = await Accessory.findById(accessoryId);
+    if (!accessory) {
+      return res.status(404).json({ message: "Acessório não encontrado." });
+    }
+
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "Utilizador não encontrado." });
+    }
+
+   
+    const owns = user.accessoriesOwned
+      .map(id => id.toString())
+      .includes(accessoryId);
+    if (!owns) {
+      return res.status(400).json({ message: "Acessório não adquirido." });
+    }
+
+    
+    const slotMap = {
+      Decor: "hat",
+      Shirts: "shirt",
+      Backgrounds: "background",
+      SkinColor: "color",
+    };
+    const slot = slotMap[accessory.type];
+    if (!slot) {
+      return res.status(400).json({ message: "Tipo de acessório inválido para equipar." });
+    }
+
+  
+    if (slot === "color") {
+      user.accessoriesEquipped.color = accessory.value;
+    } else {
+      user.accessoriesEquipped[slot] = accessory._id;
+    }
+
+    await user.save();
+
+    return res
+      .status(200)
+      .json({
+        message: "Acessório equipado com sucesso.",
+        accessoriesEquipped: user.accessoriesEquipped,
+      });
+
+  } catch (error) {
+    console.error("Erro ao equipar acessório:", error);
+    return res
+      .status(500)
+      .json({ message: "Erro ao equipar acessório.", error });
+  }
+};
+
+exports.getEquippedAccessories = async (req, res) => {
+  try {
+    
+    const user = await User.findById(req.user.id)
+      .populate("accessoriesEquipped.hat")
+      .populate("accessoriesEquipped.shirt")
+      .populate("accessoriesEquipped.background");
+    if (!user) {
+      return res.status(404).json({ message: "Usuário não encontrado." });
+    }
+
+    const { hat, shirt, background, color } = user.accessoriesEquipped;
+
+    
+    const formatAccessory = (acc) =>
+      acc
+        ? {
+            id: acc._id,
+            name: acc.name,
+            type: acc.type,
+            value: acc.value,
+            src: acc.src,
+            left: acc.left,
+            bottom: acc.bottom,
+            width: acc.width,
+          }
+        : null;
+
+    return res.status(200).json({
+      hat: formatAccessory(hat),
+      shirt: formatAccessory(shirt),
+      background: formatAccessory(background),
+      color, 
+    });
+  } catch (err) {
+    console.error("Erro ao buscar acessórios equipados:", err);
+    return res
+      .status(500)
+      .json({ message: "Erro ao buscar acessórios equipados.", error: err.message });
+  }
+};
 
 
 exports.deleteUser = async (req, res) => {
