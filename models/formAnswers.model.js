@@ -18,7 +18,7 @@ module.exports = (mongoose) => {
             required: true,
           },
           answer: {
-            type: String,
+            type: Array,
             required: true,
           },
         },
