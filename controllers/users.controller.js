@@ -322,68 +322,79 @@ exports.buyAccessory = async (req, res) => {
   }
 };
 
+
+// controllers/userController.js
+
 exports.equipAccessory = async (req, res) => {
   try {
-    const { accessoryId } = req.body;
-    if (!accessoryId) {
-      return res.status(400).json({ message: "O ID do acessório é obrigatório." });
-    }
+    const { accessoryId, type } = req.body;
 
     
-    const accessory = await Accessory.findById(accessoryId);
-    if (!accessory) {
-      return res.status(404).json({ message: "Acessório não encontrado." });
+    if (!type) {
+      return res.status(400).json({ message: "O tipo de acessório é obrigatório." });
     }
 
 
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({ message: "Utilizador não encontrado." });
-    }
-
-   
-    const owns = user.accessoriesOwned
-      .map(id => id.toString())
-      .includes(accessoryId);
-    if (!owns) {
-      return res.status(400).json({ message: "Acessório não adquirido." });
-    }
-
-    
     const slotMap = {
       Decor: "hat",
       Shirts: "shirt",
       Backgrounds: "background",
       SkinColor: "color",
     };
-    const slot = slotMap[accessory.type];
+    const slot = slotMap[type];
     if (!slot) {
       return res.status(400).json({ message: "Tipo de acessório inválido para equipar." });
     }
 
-  
-    if (slot === "color") {
-      user.accessoriesEquipped.color = accessory.value;
-    } else {
-      user.accessoriesEquipped[slot] = accessory._id;
+ 
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "Utilizador não encontrado." });
     }
 
-    await user.save();
+ 
+    if (slot !== "color") {
+      if (accessoryId !== null) {
+    
+        const accessory = await Accessory.findById(accessoryId);
+        if (!accessory) {
+          return res.status(404).json({ message: "Acessório não encontrado." });
+        }
+        const owns = user.accessoriesOwned
+          .map(id => id.toString())
+          .includes(accessoryId);
+        if (!owns) {
+          return res.status(400).json({ message: "Acessório não adquirido." });
+        }
+       
+        user.accessoriesEquipped[slot] = accessory._id;
+      } else {
+  
+        user.accessoriesEquipped[slot] = null;
+      }
 
-    return res
-      .status(200)
-      .json({
-        message: "Acessório equipado com sucesso.",
-        accessoriesEquipped: user.accessoriesEquipped,
-      });
+    } else {
+      if (accessoryId !== null) {
+        user.accessoriesEquipped.color = accessoryId;
+      } else {
+
+        user.accessoriesEquipped.color = 0;
+      }
+    }
+
+  
+    await user.save();
+    return res.status(200).json({
+      message: "Acessório atualizado com sucesso.",
+      accessoriesEquipped: user.accessoriesEquipped,
+    });
 
   } catch (error) {
-    console.error("Erro ao equipar acessório:", error);
-    return res
-      .status(500)
-      .json({ message: "Erro ao equipar acessório.", error });
+    console.error("Erro ao equipar/desquipar acessório:", error);
+    return res.status(500).json({ message: "Erro interno ao atualizar acessório." });
   }
 };
+
 
 exports.getEquippedAccessories = async (req, res) => {
   try {
