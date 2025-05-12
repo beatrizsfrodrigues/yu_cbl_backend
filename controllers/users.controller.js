@@ -324,7 +324,7 @@ exports.buyAccessory = async (req, res) => {
 
 
 // controllers/userController.js
-
+//para vestir os coisos 
 exports.equipAccessory = async (req, res) => {
   try {
     const { accessoryId, type } = req.body;
