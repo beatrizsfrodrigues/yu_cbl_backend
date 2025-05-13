@@ -10,21 +10,22 @@ exports.getTasks = async (req, res) => {
       if (req.user.role === "user") {
         let loggedUser = await User.findOne({ _id: req.user.id }).exec();
 
-        const allowedIds = [loggedUser.id];
+        const allowedIds = [loggedUser._id.toString()];
         if (loggedUser.partnerId) {
-          allowedIds.push(loggedUser.partnerId);
+          allowedIds.push(loggedUser.partnerId.toString());
         }
 
-        if (!req.user.id || !allowedIds.includes(req.user.id)) {
-          return res.status(403).json({
-            success: false,
-            msg: "Não tens permissão para ver tarefas deste utilizador.",
-          });
-        }
         if (!req.query.userId) {
           query.userId = req.user.id;
         } else {
           query.userId = req.query.userId;
+        }
+
+        if (!req.user.id || !allowedIds.includes(query.userId)) {
+          return res.status(403).json({
+            success: false,
+            msg: "Não tens permissão para ver tarefas deste utilizador.",
+          });
         }
       }
 
