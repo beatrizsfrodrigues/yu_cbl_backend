@@ -1,3 +1,5 @@
+// controllers/userController.js
+
 const db = require("../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -5,14 +7,13 @@ const jwt = require("jsonwebtoken");
 const config = require("../config/db.config.js");
 const User = db.users;
 
-const Messages = require('../models/messages.model');
+const Messages = require("../models/messages.model");
 const Accessory = db.accessories;
-
 
 exports.findAll = async (req, res) => {
   try {
     let users = await User.find().exec();
-    res.status(200).json({ success: true, users: users });
+    res.status(200).json({ success: true, users });
   } catch (err) {
     res.status(500).json({
       success: false,
@@ -20,6 +21,7 @@ exports.findAll = async (req, res) => {
     });
   }
 };
+
 exports.createUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -30,13 +32,10 @@ exports.createUser = async (req, res) => {
         .json({ message: "Por favor preenche todos os campos obrigatórios." });
     }
 
-    const userEmail = await User.findOne({ email });
-    if (userEmail) {
+    if (await User.findOne({ email })) {
       return res.status(400).json({ message: "O email já está em uso." });
     }
-
-    const userUsername = await User.findOne({ username });
-    if (userUsername) {
+    if (await User.findOne({ username })) {
       return res
         .status(400)
         .json({ message: "O nome de utilizador já está em uso." });
@@ -90,15 +89,13 @@ exports.login = async (req, res) => {
     const user = await User.findOne({
       $or: [{ email: emailOrUsername }, { username: emailOrUsername }],
     });
-
     if (!user) {
       return res
-        .status(400)
+        .status(401)
         .json({ message: "Email ou nome de utilizador está incorreto." });
     }
 
-    const check = bcrypt.compareSync(password, user.password);
-    if (!check) {
+    if (!bcrypt.compareSync(password, user.password)) {
       return res.status(401).json({
         success: false,
         accessToken: null,
@@ -106,9 +103,11 @@ exports.login = async (req, res) => {
       });
     }
 
-    const token = jwt.sign({ id: user._id, role: user.role }, config.SECRET, {
-      expiresIn: "24h",
-    });
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      config.SECRET,
+      { expiresIn: "24h" }
+    );
 
     return res.status(200).json({
       message: "Login efetuado com sucesso!",
@@ -123,12 +122,10 @@ exports.login = async (req, res) => {
   }
 };
 
-
 exports.updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
     const updateData = req.body;
-
     if (!updateData || Object.keys(updateData).length === 0) {
       return res.status(400).json({ message: "Nenhum dado para atualizar." });
     }
@@ -136,12 +133,9 @@ exports.updateUser = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
       new: true,
     });
-    
     if (!updatedUser) {
-      return res.status(404).json({ message: "Utilizador não encontrado" });
+      return res.status(404).json({ message: "Utilizador não encontrado." });
     }
-
-
     return res.json(updatedUser);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -150,28 +144,22 @@ exports.updateUser = async (req, res) => {
 
 exports.connectPartner = async (req, res) => {
   try {
-    // Verifica se o utilizador está autenticado
     if (!req.user || !req.user.id) {
-      return res.status(401).json({ message: "Utilizador não autenticado" });
+      return res.status(401).json({ message: "Utilizador não autenticado." });
     }
 
-    // Verifica se o código foi fornecido
     const { code } = req.body;
     if (!code) {
       return res.status(400).json({ message: "É necessário informar o code." });
-
     }
 
-    // Procura o parceiro com o código fornecido
     const partnerUser = await User.findOne({ code });
     if (!partnerUser) {
       return res
         .status(404)
         .json({ message: "Nenhum Utilizador encontrado com esse code." });
-
     }
 
-    // Procura o utilizador autenticado
     const user = await User.findById(req.user.id);
     if (!user) {
       return res
@@ -179,51 +167,32 @@ exports.connectPartner = async (req, res) => {
         .json({ message: "Utilizador logado não encontrado." });
     }
 
-    // Verifica se algum dos utilizadores já tem parceiro
     if (user.partnerId || partnerUser.partnerId) {
-      return res.status(400).json({ message: 'Um dos utilizadores já tem parceiro atribuído.' });
-    }
-
-    // Atribui o parceiro a ambos os utilizadores
-    user.partnerId = partnerUser._id;
-    partnerUser.partnerId = user._id;
-
-    await user.save();
-    await partnerUser.save();
-
-    // Verifica se já existe conversa entre os dois utilizadores
-    const existingConversation = await Messages.findOne({
-
-      usersId: { $all: [user._id, partnerUser._id] }
-    });
-
-    // Se não existir, cria uma nova conversa
-   /*if (!existingConversation) {
-      await Messages.create({
-        usersId: [user._id, partnerUser._id],
-        messages: []
-
-      usersId: { $all: [user._id, partnerUser._id] },
-    });*/
-
-    // Se não existir, cria uma nova conversa
-    if (!existingConversation) {
-      await Messages.create({
-        usersId: [user._id, partnerUser._id],
-        messages: []
+      return res.status(400).json({
+        message: "Um dos utilizadores já tem parceiro atribuído.",
       });
     }
 
+    user.partnerId = partnerUser._id;
+    partnerUser.partnerId = user._id;
+    await user.save();
+    await partnerUser.save();
 
- 
+    const existingConversation = await Messages.findOne({
+      usersId: { $all: [user._id, partnerUser._id] },
+    });
+    if (!existingConversation) {
+      await Messages.create({
+        usersId: [user._id, partnerUser._id],
+        messages: [],
+      });
+    }
 
     return res.json({
       message:
         "Partner conectado com sucesso. Conversa criada (caso não existisse).",
-      user: user,
-
+      user,
     });
-
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: error.message });
@@ -234,22 +203,19 @@ exports.getPartner = async (req, res) => {
   try {
     const loggedUser = await User.findById(req.user.id);
     if (!loggedUser) {
-      return res.status(401).json({ message: "Utilizador não autenticado" });
+      return res.status(401).json({ message: "Utilizador não autenticado." });
     }
-
     if (!loggedUser.partnerId) {
       return res
         .status(404)
-        .json({ message: "Nenhum parceiro conectado ao Utilizador logado" });
+        .json({ message: "Nenhum parceiro conectado ao Utilizador logado." });
     }
-
     const partnerUser = await User.findById(loggedUser.partnerId);
     if (!partnerUser) {
       return res
         .status(404)
-        .json({ message: "Utilizador parceiro não encontrado" });
+        .json({ message: "Utilizador parceiro não encontrado." });
     }
-
     return res.json(partnerUser);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -260,38 +226,41 @@ exports.getLoggedInUser = async (req, res) => {
   try {
     const loggedUser = await User.findById(req.user.id);
     if (!loggedUser) {
-      return res.status(401).json({ message: "Utilizador não autenticado" });
+      return res.status(401).json({ message: "Utilizador não autenticado." });
     }
     return res.json(loggedUser);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
+
 exports.getUserAccessories = async (req, res) => {
   try {
-    
     if (!req.user || !req.user.id) {
-      return res.status(401).json({ message: 'Utilizador não autenticado' });
+      return res.status(401).json({ message: "Utilizador não autenticado." });
     }
-
-    const user = await User.findById(req.user.id).populate('accessoriesOwned');
-
-
+    const user = await User.findById(req.user.id).populate(
+      "accessoriesOwned"
+    );
     if (!user) {
       return res.status(404).json({ message: "Utilizador não encontrado." });
     }
-
     return res.json(user.accessoriesOwned);
   } catch (error) {
     console.error("Erro ao procurar acessórios:", error);
-    return res.status(500).json({ message: "Erro ao buscar acessórios", error });
+    return res
+      .status(500)
+      .json({ message: "Erro ao buscar acessórios", error });
   }
 };
+
 exports.buyAccessory = async (req, res) => {
   try {
     const { accessoryId } = req.body;
     if (!accessoryId) {
-      return res.status(400).json({ message: "O ID do acessório é obrigatório." });
+      return res
+        .status(400)
+        .json({ message: "O ID do acessório é obrigatório." });
     }
 
     const accessory = await Accessory.findById(accessoryId);
@@ -301,39 +270,39 @@ exports.buyAccessory = async (req, res) => {
 
     const user = await User.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({ message: "Utilizar não encontrado." });
+      return res.status(404).json({ message: "Utilizador não encontrado." });
     }
 
-    if (!user.accessoriesOwned) {
-      user.accessoriesOwned = [];
-    }
+    user.accessoriesOwned = user.accessoriesOwned || [];
     if (user.accessoriesOwned.includes(accessoryId)) {
       return res.status(400).json({ message: "Acessório já adquirido." });
     }
 
     user.accessoriesOwned.push(accessoryId);
     await user.save();
-    await user.populate('accessoriesOwned');
+    await user.populate("accessoriesOwned");
 
-    return res.json({ message: "Acessório adquirido com sucesso.", accessories: user.accessoriesOwned });
+    return res.json({
+      message: "Acessório adquirido com sucesso.",
+      accessories: user.accessoriesOwned,
+    });
   } catch (error) {
     console.error("Erro ao adquirir acessório:", error);
-    return res.status(500).json({ message: "Erro ao adquirir acessório", error });
+    return res
+      .status(500)
+      .json({ message: "Erro ao adquirir acessório", error });
   }
 };
 
-
-// controllers/userController.js
-//para vestir os coisos 
+// para vestir os coisos
 exports.equipAccessory = async (req, res) => {
   try {
     const { accessoryId, type } = req.body;
-
-    
     if (!type) {
-      return res.status(400).json({ message: "O tipo de acessório é obrigatório." });
+      return res
+        .status(400)
+        .json({ message: "O tipo de acessório é obrigatório." });
     }
-
 
     const slotMap = {
       Decor: "hat",
@@ -343,73 +312,66 @@ exports.equipAccessory = async (req, res) => {
     };
     const slot = slotMap[type];
     if (!slot) {
-      return res.status(400).json({ message: "Tipo de acessório inválido para equipar." });
+      return res
+        .status(400)
+        .json({ message: "Tipo de acessório inválido para equipar." });
     }
 
- 
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ message: "Utilizador não encontrado." });
     }
 
- 
     if (slot !== "color") {
       if (accessoryId !== null) {
-    
         const accessory = await Accessory.findById(accessoryId);
         if (!accessory) {
           return res.status(404).json({ message: "Acessório não encontrado." });
         }
         const owns = user.accessoriesOwned
-          .map(id => id.toString())
+          .map((id) => id.toString())
           .includes(accessoryId);
         if (!owns) {
-          return res.status(400).json({ message: "Acessório não adquirido." });
+          return res
+            .status(400)
+            .json({ message: "Acessório não adquirido." });
         }
-       
         user.accessoriesEquipped[slot] = accessory._id;
       } else {
-  
         user.accessoriesEquipped[slot] = null;
       }
-
     } else {
       if (accessoryId !== null) {
         user.accessoriesEquipped.color = accessoryId;
       } else {
-
         user.accessoriesEquipped.color = 0;
       }
     }
 
-  
     await user.save();
     return res.status(200).json({
       message: "Acessório atualizado com sucesso.",
       accessoriesEquipped: user.accessoriesEquipped,
     });
-
   } catch (error) {
     console.error("Erro ao equipar/desquipar acessório:", error);
-    return res.status(500).json({ message: "Erro interno ao atualizar acessório." });
+    return res
+      .status(500)
+      .json({ message: "Erro interno ao atualizar acessório." });
   }
 };
 
-
 exports.getEquippedAccessories = async (req, res) => {
   try {
-    
     const user = await User.findById(req.user.id)
       .populate("accessoriesEquipped.hat")
       .populate("accessoriesEquipped.shirt")
       .populate("accessoriesEquipped.background");
     if (!user) {
-      return res.status(404).json({ message: "Usuário não encontrado." });
+      return res.status(404).json({ message: "Utilizador não encontrado." });
     }
 
     const { hat, shirt, background, color } = user.accessoriesEquipped;
-
-    
     const formatAccessory = (acc) =>
       acc
         ? {
@@ -428,16 +390,16 @@ exports.getEquippedAccessories = async (req, res) => {
       hat: formatAccessory(hat),
       shirt: formatAccessory(shirt),
       background: formatAccessory(background),
-      color, 
+      color,
     });
   } catch (err) {
     console.error("Erro ao buscar acessórios equipados:", err);
-    return res
-      .status(500)
-      .json({ message: "Erro ao buscar acessórios equipados.", error: err.message });
+    return res.status(500).json({
+      message: "Erro ao buscar acessórios equipados.",
+      error: err.message,
+    });
   }
 };
-
 
 exports.deleteUser = async (req, res) => {
   try {
@@ -445,18 +407,23 @@ exports.deleteUser = async (req, res) => {
     if (!userToDelete) {
       return res.status(404).json({ message: "Utilizador não encontrado." });
     }
-    return res.status(200).json({ message: "Utilizador eliminado com sucesso." });
+    return res
+      .status(200)
+      .json({ message: "Utilizador eliminado com sucesso." });
   } catch (error) {
-    return res.status(500).json({ message: "Erro ao eliminar o utilizador.", error });
+    return res
+      .status(500)
+      .json({ message: "Erro ao eliminar o utilizador.", error });
   }
 };
-
 
 exports.getUserStats = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     return res.status(200).json({ totalUsers });
   } catch (error) {
-    return res.status(500).json({ message: "Erro ao obter as estatísticas.", error });
+    return res
+      .status(500)
+      .json({ message: "Erro ao obter as estatísticas.", error });
   }
 };

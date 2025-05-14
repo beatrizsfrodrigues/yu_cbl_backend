@@ -9,6 +9,7 @@ exports.getTasks = async (req, res) => {
       const requestedUserId = req.query.userId;
       let query = {};
       if (req.user.role === "user") {
+
         let loggedUser = await User.findOne({ _id: req.user.id }).exec();     
          const ownId     = loggedUser._id.toString();
          const partnerId = loggedUser.partnerId.toString();
@@ -16,13 +17,17 @@ exports.getTasks = async (req, res) => {
   
          
         if (!requestedUserId || !allowedIds.includes(requestedUserId)) {
+
           return res.status(403).json({
             success: false,
             msg: "Não tens permissão para ver tarefas deste utilizador.",
           });
         }
-
-        query.userId = requestedUserId;
+        if (!req.query.userId) {
+          query.userId = req.user.id;
+        } else {
+          query.userId = req.query.userId;
+        }
       }
 
       if (req.user.role === "admin" && req.query.userId) {
@@ -60,6 +65,7 @@ exports.createTask = async (req, res) => {
 
       if (loggedUser.partnerId) {
         const { title, description } = req.body;
+        console.log(req.body);
 
         if (!title || !description) {
           return res.status(400).json({
@@ -100,6 +106,7 @@ exports.createTask = async (req, res) => {
       });
     }
   } catch (err) {
+    console.log(err);
     return res.status(500).json({
       success: false,
       msg: err.message || "Algum erro ocorreu ao criar a tarefa.",
@@ -127,7 +134,7 @@ exports.completeTask = async (req, res) => {
         });
       }
 
-      if (task.userId === req.user.id) {
+      if (task.userId.toString() === req.user.id) {
         task.completed = true;
         task.picture = req.body.picture;
         task.notification = true;
@@ -291,7 +298,7 @@ exports.verifyTask = async (req, res) => {
 
       let notification;
 
-      if (task.userId === loggedUser.partnerId) {
+      if (task.userId.toString() === loggedUser.partnerId.toString()) {
         if (req.body.verify == true) {
           task.completedDate = getFormattedDate();
           task.verified = true;
@@ -345,6 +352,8 @@ exports.verifyTask = async (req, res) => {
 
 exports.removeRejectMessage = async (req, res) => {
   try {
+    console.log(req.params.id);
+    console.log(req.user);
     if (req.user) {
       const taskId = req.params.id;
 
@@ -357,7 +366,7 @@ exports.removeRejectMessage = async (req, res) => {
         });
       }
 
-      if (task.userId !== req.user.id) {
+      if (task.userId.toString() !== req.user.id.toString()) {
         return res.status(403).json({
           success: false,
           msg: "Não tens permissão para aceder a esta tarefa.",
@@ -404,7 +413,7 @@ exports.notifyTasks = async (req, res) => {
         });
       }
 
-      if (req.user.id !== partner.partnerId) {
+      if (req.user.id.toString() !== partner.partnerId.toString()) {
         return res.status(403).json({
           success: false,
           msg: "Não tens permissão para aceder a esta tarefa.",
