@@ -42,21 +42,24 @@ module.exports = (mongoose) => {
         default: []
       },
       accessoriesEquipped: {
-        type: Object,
-        default: {
-          hat: null,
-          shirt: null,
-          color: 40,
-          background: null,
+        hat: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Accessory",
+          default: null,
         },
-      },
-      accessoriesEquipped: {
-        type: Object,
-        default: {
-          hat: null,
-          shirt: null,
-          color: 40,
-          background: null,
+        shirt: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Accessory",
+          default: null,
+        },
+        background: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Accessory",
+          default: null,
+        },
+        color: {
+          type: Number,
+          default: 0,
         },
       },
       mascot: {
