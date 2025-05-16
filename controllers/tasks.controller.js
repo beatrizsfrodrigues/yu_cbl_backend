@@ -6,15 +6,20 @@ const Message = db.messages;
 exports.getTasks = async (req, res) => {
   try {
     if (req.user) {
+      const requestedUserId = req.query.userId;
       let query = {};
       if (req.user.role === "user") {
         let loggedUser = await User.findOne({ _id: req.user.id }).exec();
+        const ownId = loggedUser._id.toString();
+        const partnerId = loggedUser.partnerId.toString();
+        const allowedIds = [ownId, partnerId];
 
-        const allowedIds = [loggedUser._id.toString()];
-        if (loggedUser.partnerId) {
-          allowedIds.push(loggedUser.partnerId.toString());
+        if (!requestedUserId || !allowedIds.includes(requestedUserId)) {
+          return res.status(403).json({
+            success: false,
+            msg: "Não tens permissão para ver tarefas deste utilizador.",
+          });
         }
-
         if (!req.query.userId) {
           query.userId = req.user.id;
         } else {
