@@ -6,10 +6,17 @@ const port = process.env.PORT; // use environment variables
 const host = process.env.HOST;
 
 const allowedOrigin = process.env.CLIENT_URL;
+const allowedOriginAdmin = process.env.ADMIN_URL;
+
+const allowedOrigins = [
+  allowedOriginAdmin,
+  allowedOrigin,
+];
+
 
 app.use(
   cors({
-    origin: allowedOrigin,
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],

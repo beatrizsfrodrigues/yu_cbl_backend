@@ -1,3 +1,6 @@
+const mongoose = require("mongoose");
+const Schema   = mongoose.Schema;
+
 module.exports = (mongoose) => {
   const schema = mongoose.Schema(
     {
@@ -41,27 +44,16 @@ module.exports = (mongoose) => {
         type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Accessory' }],
         default: []
       },
-      accessoriesEquipped: {
-        hat: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Accessory",
-          default: null,
+       accessoriesEquipped: {
+          background: { type: Schema.Types.ObjectId, ref: "Accessory", default: null },
+          shirt:      { type: Schema.Types.ObjectId, ref: "Accessory", default: null },
+          color:      { type: Number,                     default: 0    },
+          bigode:     { type: Schema.Types.ObjectId, ref: "Accessory", default: null },
+          cachecol:   { type: Schema.Types.ObjectId, ref: "Accessory", default: null },
+          chapeu:     { type: Schema.Types.ObjectId, ref: "Accessory", default: null },
+          ouvidos:    { type: Schema.Types.ObjectId, ref: "Accessory", default: null },
         },
-        shirt: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Accessory",
-          default: null,
-        },
-        background: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Accessory",
-          default: null,
-        },
-        color: {
-          type: Number,
-          default: 0,
-        },
-      },
+
       mascot: {
         type: String,
         default:

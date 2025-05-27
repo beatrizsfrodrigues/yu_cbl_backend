@@ -305,11 +305,15 @@ exports.equipAccessory = async (req, res) => {
     }
 
     const slotMap = {
-      Decor: "hat",
-      Shirts: "shirt",
       Backgrounds: "background",
-      SkinColor: "color",
+      Shirts:      "shirt",
+      SkinColor:   "color",
+      Bigode:      "bigode",
+      Cachecol:    "cachecol",
+      Chapeu:      "chapeu",
+      Ouvidos:     "ouvidos",
     };
+
     const slot = slotMap[type];
     if (!slot) {
       return res
@@ -364,34 +368,38 @@ exports.equipAccessory = async (req, res) => {
 exports.getEquippedAccessories = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
-      .populate("accessoriesEquipped.hat")
+      .populate("accessoriesEquipped.background")
       .populate("accessoriesEquipped.shirt")
-      .populate("accessoriesEquipped.background");
+      .populate("accessoriesEquipped.bigode")
+      .populate("accessoriesEquipped.cachecol")
+      .populate("accessoriesEquipped.chapeu")
+      .populate("accessoriesEquipped.ouvidos");
+
     if (!user) {
       return res.status(404).json({ message: "Utilizador não encontrado." });
     }
 
-    const { hat, shirt, background, color } = user.accessoriesEquipped;
     const formatAccessory = (acc) =>
       acc
         ? {
-            id: acc._id,
-            name: acc.name,
-            type: acc.type,
+            id:    acc._id,
+            name:  acc.name,
+            type:  acc.type,
             value: acc.value,
-            src: acc.src,
-            left: acc.left,
-            bottom: acc.bottom,
-            width: acc.width,
+            src:   acc.src,
           }
         : null;
 
-    return res.status(200).json({
-      hat: formatAccessory(hat),
-      shirt: formatAccessory(shirt),
-      background: formatAccessory(background),
-      color,
+   return res.status(200).json({
+      background:   formatAccessory(user.accessoriesEquipped.background),
+      shirt:        formatAccessory(user.accessoriesEquipped.shirt),
+      color:        user.accessoriesEquipped.color,
+      bigode:       formatAccessory(user.accessoriesEquipped.bigode),
+      cachecol:     formatAccessory(user.accessoriesEquipped.cachecol),
+      chapeu:       formatAccessory(user.accessoriesEquipped.chapeu),
+      ouvidos:      formatAccessory(user.accessoriesEquipped.ouvidos),
     });
+
   } catch (err) {
     console.error("Erro ao buscar acessórios equipados:", err);
     return res.status(500).json({

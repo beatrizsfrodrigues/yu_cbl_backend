@@ -2,9 +2,28 @@ const db = require("../models");
 const Accessories = db.accessories;
 const User = db.users;
 
+
+const allowedTypes = [
+  "Backgrounds",
+  "Shirts",
+  "SkinColor",
+  "Bigode",
+  "Cachecol",
+  "Chapeu",
+  "Ouvidos"
+];
+
 exports.getAccessories = async (req, res) => {
   try {
-    const allowedTypes = ["Decor", "Shirts", "Backgrounds", "SkinColor"];
+    const allowedTypes = [
+      "Backgrounds",
+      "Shirts",
+      "SkinColor",
+      "Bigode",
+      "Cachecol",
+      "Chapeu",
+      "Ouvidos"
+    ];
     let query = {};
 
     if (req.query.type) {
@@ -30,46 +49,39 @@ exports.getAccessories = async (req, res) => {
   }
 };
 
+
 exports.addAccessory = async (req, res) => {
   try {
-    if (req.user) {
-      if (req.user.role == "admin") {
-        const { name, type, value, src, left, bottom, width } = req.body;
-
-        if (!name || !type || !value || !src || !left || !bottom || !width) {
-          return res.status(400).json({
-            success: false,
-            msg: "Por favor preenche todos os campos obrigatórios.",
-          });
-        }
-
-        const newAccessory = await Accessories.create({
-          name,
-          type,
-          value,
-          src,
-          left,
-          bottom,
-          width,
-        });
-
-        return res.status(201).json({
-          success: true,
-          msg: "Acessório criado com sucesso!",
-          accessory: newAccessory,
-        });
-      } else {
-        return res.status(403).json({
-          success: false,
-          msg: "Não tens permissão para aceder a esta rota.",
-        });
-      }
-    } else {
+    if (!req.user || req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
-        msg: "Tens de ter um token para aceder a esta rota.",
+        msg: req.user
+          ? "Não tens permissão para aceder a esta rota."
+          : "Tens de ter um token para aceder a esta rota.",
       });
     }
+
+    const { name, type, value, src } = req.body;
+
+    if (!name || !type || !value || !src) {
+      return res.status(400).json({
+        success: false,
+        msg: "Por favor preenche todos os campos obrigatórios: name, type, value e src.",
+      });
+    }
+    if (!allowedTypes.includes(type)) {
+      return res.status(400).json({
+        success: false,
+        msg: `Tipo inválido. Tipos válidos: ${allowedTypes.join(", ")}`,
+      });
+   }
+
+    const newAccessory = await Accessories.create({ name, type, value, src });
+    return res.status(201).json({
+      success: true,
+      msg: "Acessório criado com sucesso!",
+      accessory: newAccessory,
+    });
   } catch (err) {
     return res.status(500).json({
       success: false,
@@ -77,6 +89,63 @@ exports.addAccessory = async (req, res) => {
     });
   }
 };
+
+exports.updateAccessory = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        msg: req.user
+          ? "Não tens permissão para aceder a esta rota."
+          : "Tens de ter um token para aceder a esta rota.",
+      });
+    }
+
+    const accId = req.params.id;
+    const { name, type, value, src } = req.body;
+
+    // validação dos campos
+    if (!name || !type || !value || !src) {
+      return res.status(400).json({
+        success: false,
+        msg: "Por favor preenche todos os campos obrigatórios: name, type, value e src.",
+      });
+    }
+    if (!allowedTypes.includes(type)) {
+      return res.status(400).json({
+        success: false,
+        msg: `Tipo inválido. Tipos válidos: ${allowedTypes.join(", ")}`,
+      });
+    }
+
+    const accessory = await Accessories.findById(accId).exec();
+    if (!accessory) {
+      return res.status(404).json({
+        success: false,
+        msg: "Acessório não encontrado.",
+      });
+    }
+
+ 
+    accessory.name = name;
+    accessory.type = type;
+    accessory.value = value;
+    accessory.src = src;
+    await accessory.save();
+
+    return res.status(200).json({
+      success: true,
+      msg: "Acessório atualizado com sucesso!",
+      accessory,
+    });
+  } catch (err) {
+   return res.status(500).json({
+      success: false,
+      msg: err.message || "Algum erro ocorreu ao editar o acessório.",
+    });
+  }
+};
+
 
 exports.deleteAccessory = async (req, res) => {
   try {

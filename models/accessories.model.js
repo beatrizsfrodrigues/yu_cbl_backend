@@ -7,7 +7,15 @@ module.exports = (mongoose) => {
       },
       type: {
         type: String,
-        enum: ["Decor", "Shirts", "Backgrounds", "SkinColor"],
+        enum: [
+          "Backgrounds",
+          "Shirts",
+          "SkinColor",
+          "Bigode",
+          "Cachecol",
+          "Chapeu",
+          "Ouvidos"
+        ],
         allowNull: false,
       },
       value: { type: Number, allowNull: false },
