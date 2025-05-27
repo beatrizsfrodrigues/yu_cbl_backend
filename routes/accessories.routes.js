@@ -20,11 +20,14 @@ router
   .get(accessoriesController.getAccessories)
   .post(authMiddleware, accessoriesController.addAccessory);
 
-router
-  .route("/:id")
-  .delete(authMiddleware, accessoriesController.deleteAccessory);
+
 
 // router.get("/", accessoriesController.findAll);
+
+router
+  .route("/:id")
+  .put(authMiddleware, accessoriesController.updateAccessory)
+  .delete(authMiddleware, accessoriesController.deleteAccessory);
 
 router.get("/stats", authMiddleware, accessoriesController.getAccessoriesStats);
 
