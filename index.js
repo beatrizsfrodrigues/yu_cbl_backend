@@ -3,16 +3,12 @@ const express = require("express");
 const cors = require("cors"); // middleware to enable CORS (Cross-Origin Resource Sharing)
 const app = express();
 const port = process.env.PORT; // use environment variables
-const host = process.env.HOST;
+// const host = process.env.HOST;
 
 const allowedOrigin = process.env.CLIENT_URL;
 const allowedOriginAdmin = process.env.ADMIN_URL;
 
-const allowedOrigins = [
-  allowedOriginAdmin,
-  allowedOrigin,
-];
-
+const allowedOrigins = [allowedOriginAdmin, allowedOrigin];
 
 app.use(
   cors({
@@ -41,8 +37,12 @@ app.use("/form-answers", require("./routes/formAnswers.routes.js"));
 app.all("*", function (req, res) {
   res.status(404).json({ message: "Endepoint not found" });
 });
-const server = app.listen(port, host, () =>
-  console.log(`App listening at http://${host}:${port}/`)
+// const server = app.listen(port, host, () =>
+//   console.log(`App listening at http://${host}:${port}/`)
+// );
+
+const server = app.listen(port || 3000, () =>
+  console.log(`App listening on port ${port || 3000}`)
 );
 
 module.exports = { app, server };
