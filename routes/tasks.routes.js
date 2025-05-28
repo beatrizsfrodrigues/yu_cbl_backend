@@ -15,6 +15,14 @@ router.use((req, res, next) => {
   next();
 });
 
+
+router.get(
+  "/stats",
+  authMiddleware,
+  tasksController.getTasksStats
+);
+
+
 router
   .route("/")
   .get(authMiddleware, tasksController.getTasks)
