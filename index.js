@@ -5,14 +5,24 @@ const app = express();
 const port = process.env.PORT; // use environment variables
 // const host = process.env.HOST;
 
-const allowedOrigin = process.env.CLIENT_URL;
-const allowedOriginAdmin = process.env.ADMIN_URL;
+// const allowedOrigin = process.env.CLIENT_URL;
+// const allowedOriginAdmin = process.env.ADMIN_URL;
 
-const allowedOrigins = [allowedOriginAdmin, allowedOrigin];
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.ADMIN_URL,
+  process.env.VERCEL_URL,
+].filter(Boolean);
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
