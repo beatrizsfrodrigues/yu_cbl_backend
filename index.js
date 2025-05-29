@@ -3,6 +3,9 @@ const express = require("express");
 const cors = require("cors"); // middleware to enable CORS (Cross-Origin Resource Sharing)
 const app = express();
 const port = process.env.PORT; // use environment variables
+const cookieParser = require("cookie-parser");
+
+app.use(cookieParser()); // middleware to parse cookies
 // const host = process.env.HOST;
 
 // const allowedOrigin = process.env.CLIENT_URL;
@@ -12,14 +15,18 @@ const allowedOrigins = [
   process.env.CLIENT_URL,
   process.env.ADMIN_URL,
   process.env.VERCEL_URL,
+  "http://localhost:3000",
+  "http://localhost:3001",
 ].filter(Boolean);
 
 app.use(
   cors({
     origin: function (origin, callback) {
+      console.log("CORS origin check:", origin);
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.error("Blocked by CORS:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },

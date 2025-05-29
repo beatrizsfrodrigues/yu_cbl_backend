@@ -14,6 +14,10 @@ exports.getTasks = async (req, res) => {
         const partnerId = loggedUser.partnerId.toString();
         const allowedIds = [ownId, partnerId];
 
+        console.log(req.query.userId);
+        console.log(req.user.id);
+        console.log(partnerId);
+
         if (!requestedUserId || !allowedIds.includes(requestedUserId)) {
           return res.status(403).json({
             success: false,
