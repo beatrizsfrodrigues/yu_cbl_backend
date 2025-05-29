@@ -114,6 +114,7 @@ exports.login = async (req, res) => {
       sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000, // 1 day in ms
       path: "/",
+      partitioned: true,
     });
 
     // Create a copy of the user object and remove the password
@@ -125,6 +126,7 @@ exports.login = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000,
+      partitioned: true,
     });
 
     // Send user info only (no token in JSON)
