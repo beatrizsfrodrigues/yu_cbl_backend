@@ -3,6 +3,36 @@ const Task = db.tasks;
 const User = db.users;
 const Message = db.messages;
 
+
+exports.getTasksStats = async (req, res) => {
+  try {
+ 
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        msg: req.user
+          ? 'Não tens permissão para aceder a esta rota.'
+          : 'Tens de ter um token para aceder a esta rota.',
+      });
+    }
+    const totalTasks = await Task.countDocuments({});
+    const totalCompletedTasks = await Task.countDocuments({ completed: true });
+
+    return res.status(200).json({
+      success: true,
+      totalTasks,
+      totalCompletedTasks,
+    });
+  } catch (err) {
+    console.error('Erro em getTasksStats:', err);
+    return res.status(500).json({
+      success: false,
+      msg: err.message || 'Erro ao obter estatísticas de tarefas.',
+    });
+  }
+};
+
+
 exports.getTasks = async (req, res) => {
   try {
     if (req.user) {
