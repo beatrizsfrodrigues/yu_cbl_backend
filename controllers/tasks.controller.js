@@ -3,6 +3,7 @@ const Task = db.tasks;
 const User = db.users;
 const Message = db.messages;
 
+
 exports.getTasksStats = async (req, res) => {
   try {
  
@@ -32,10 +33,6 @@ exports.getTasksStats = async (req, res) => {
 };
 
 
-
-
-
-
 exports.getTasks = async (req, res) => {
   try {
     if (req.user) {
@@ -46,6 +43,10 @@ exports.getTasks = async (req, res) => {
         const ownId = loggedUser._id.toString();
         const partnerId = loggedUser.partnerId.toString();
         const allowedIds = [ownId, partnerId];
+
+        console.log(req.query.userId);
+        console.log(req.user.id);
+        console.log(partnerId);
 
         if (!requestedUserId || !allowedIds.includes(requestedUserId)) {
           return res.status(403).json({

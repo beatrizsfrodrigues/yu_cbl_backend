@@ -88,7 +88,8 @@ exports.login = async (req, res) => {
 
     const user = await User.findOne({
       $or: [{ email: emailOrUsername }, { username: emailOrUsername }],
-    });
+    }).populate("accessoriesOwned");
+
     if (!user) {
       return res
         .status(401)
@@ -103,16 +104,40 @@ exports.login = async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      config.SECRET,
-      { expiresIn: "24h" }
-    );
+    const token = jwt.sign({ id: user._id, role: user.role }, config.SECRET, {
+      expiresIn: "24h",
+    });
 
+    // Set token as an HTTP-only cookie
+    res.cookie("token", token, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "none",
+      maxAge: 24 * 60 * 60 * 1000, // 1 day in ms
+      path: "/",
+      partitioned: true,
+    });
+
+    // Create a copy of the user object and remove the password
+    const { password: _pwd, ...userWithoutPassword } = user.toObject();
+
+    // Save to cookie
+    res.cookie("loggedInUser", JSON.stringify(userWithoutPassword), {
+      httpOnly: false, // frontend-accessible
+      secure: true,
+      sameSite: "none",
+      maxAge: 24 * 60 * 60 * 1000,
+      partitioned: true,
+    });
+
+    console.log(user);
+
+    console.log(userWithoutPassword);
+
+    // Send user info only (no token in JSON)
     return res.status(200).json({
       message: "Login efetuado com sucesso!",
-      user,
-      token,
+      userWithoutPassword,
     });
   } catch (error) {
     console.error(error);
@@ -239,9 +264,7 @@ exports.getUserAccessories = async (req, res) => {
     if (!req.user || !req.user.id) {
       return res.status(401).json({ message: "Utilizador não autenticado." });
     }
-    const user = await User.findById(req.user.id).populate(
-      "accessoriesOwned"
-    );
+    const user = await User.findById(req.user.id).populate("accessoriesOwned");
     if (!user) {
       return res.status(404).json({ message: "Utilizador não encontrado." });
     }
@@ -306,12 +329,12 @@ exports.equipAccessory = async (req, res) => {
 
     const slotMap = {
       Backgrounds: "background",
-      Shirts:      "shirt",
-      SkinColor:   "color",
-      Bigode:      "bigode",
-      Cachecol:    "cachecol",
-      Chapeu:      "chapeu",
-      Ouvidos:     "ouvidos",
+      Shirts: "shirt",
+      SkinColor: "color",
+      Bigode: "bigode",
+      Cachecol: "cachecol",
+      Chapeu: "chapeu",
+      Ouvidos: "ouvidos",
     };
 
     const slot = slotMap[type];
@@ -336,9 +359,7 @@ exports.equipAccessory = async (req, res) => {
           .map((id) => id.toString())
           .includes(accessoryId);
         if (!owns) {
-          return res
-            .status(400)
-            .json({ message: "Acessório não adquirido." });
+          return res.status(400).json({ message: "Acessório não adquirido." });
         }
         user.accessoriesEquipped[slot] = accessory._id;
       } else {
@@ -382,24 +403,23 @@ exports.getEquippedAccessories = async (req, res) => {
     const formatAccessory = (acc) =>
       acc
         ? {
-            id:    acc._id,
-            name:  acc.name,
-            type:  acc.type,
+            id: acc._id,
+            name: acc.name,
+            type: acc.type,
             value: acc.value,
-            src:   acc.src,
+            src: acc.src,
           }
         : null;
 
-   return res.status(200).json({
-      background:   formatAccessory(user.accessoriesEquipped.background),
-      shirt:        formatAccessory(user.accessoriesEquipped.shirt),
-      color:        user.accessoriesEquipped.color,
-      bigode:       formatAccessory(user.accessoriesEquipped.bigode),
-      cachecol:     formatAccessory(user.accessoriesEquipped.cachecol),
-      chapeu:       formatAccessory(user.accessoriesEquipped.chapeu),
-      ouvidos:      formatAccessory(user.accessoriesEquipped.ouvidos),
+    return res.status(200).json({
+      background: formatAccessory(user.accessoriesEquipped.background),
+      shirt: formatAccessory(user.accessoriesEquipped.shirt),
+      color: user.accessoriesEquipped.color,
+      bigode: formatAccessory(user.accessoriesEquipped.bigode),
+      cachecol: formatAccessory(user.accessoriesEquipped.cachecol),
+      chapeu: formatAccessory(user.accessoriesEquipped.chapeu),
+      ouvidos: formatAccessory(user.accessoriesEquipped.ouvidos),
     });
-
   } catch (err) {
     console.error("Erro ao buscar acessórios equipados:", err);
     return res.status(500).json({

@@ -2,14 +2,19 @@ const jwt = require("jsonwebtoken");
 const config = require("../config/db.config.js");
 
 module.exports = (req, res, next) => {
+  // Try to get token from Authorization header
+  let token;
+
   const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    return res.status(401).json({ message: "Token não fornecido." });
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.split(" ")[1];
+  } else if (req.cookies?.token) {
+    // Fallback to token cookie
+    token = req.cookies.token;
   }
 
-  const [scheme, token] = authHeader.split(" ");
-  if (scheme !== "Bearer") {
-    return res.status(401).json({ message: "Formato de token inválido." });
+  if (!token) {
+    return res.status(401).json({ message: "Token não fornecido." });
   }
 
   try {
@@ -23,7 +28,7 @@ module.exports = (req, res, next) => {
       });
     }
 
-    return next();
+    next();
   } catch (error) {
     return res.status(401).json({ message: "Token inválido." });
   }

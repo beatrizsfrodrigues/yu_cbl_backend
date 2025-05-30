@@ -2,7 +2,6 @@ const db = require("../models");
 const Accessories = db.accessories;
 const User = db.users;
 
-
 const allowedTypes = [
   "Backgrounds",
   "Shirts",
@@ -10,7 +9,7 @@ const allowedTypes = [
   "Bigode",
   "Cachecol",
   "Chapeu",
-  "Ouvidos"
+  "Ouvidos",
 ];
 
 exports.getAccessories = async (req, res) => {
@@ -22,7 +21,7 @@ exports.getAccessories = async (req, res) => {
       "Bigode",
       "Cachecol",
       "Chapeu",
-      "Ouvidos"
+      "Ouvidos",
     ];
     let query = {};
 
@@ -49,7 +48,6 @@ exports.getAccessories = async (req, res) => {
   }
 };
 
-
 exports.addAccessory = async (req, res) => {
   try {
     if (!req.user || req.user.role !== "admin") {
@@ -74,7 +72,7 @@ exports.addAccessory = async (req, res) => {
         success: false,
         msg: `Tipo inválido. Tipos válidos: ${allowedTypes.join(", ")}`,
       });
-   }
+    }
 
     const newAccessory = await Accessories.create({ name, type, value, src });
     return res.status(201).json({
@@ -126,7 +124,6 @@ exports.updateAccessory = async (req, res) => {
       });
     }
 
- 
     accessory.name = name;
     accessory.type = type;
     accessory.value = value;
@@ -139,13 +136,12 @@ exports.updateAccessory = async (req, res) => {
       accessory,
     });
   } catch (err) {
-   return res.status(500).json({
+    return res.status(500).json({
       success: false,
       msg: err.message || "Algum erro ocorreu ao editar o acessório.",
     });
   }
 };
-
 
 exports.deleteAccessory = async (req, res) => {
   try {
