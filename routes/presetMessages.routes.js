@@ -20,4 +20,10 @@ router
   .get(presetMessagesController.getMessages)
   .post(authMiddleware, presetMessagesController.createMessage);
 
+
+router
+  .route("/:id")
+  .put(authMiddleware, presetMessagesController.updateMessage)
+  .delete(authMiddleware, presetMessagesController.deleteMessage);
+
 module.exports = router;

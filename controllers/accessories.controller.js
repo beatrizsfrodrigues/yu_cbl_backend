@@ -145,76 +145,80 @@ exports.updateAccessory = async (req, res) => {
 
 exports.deleteAccessory = async (req, res) => {
   try {
-    if (req.user) {
-      if (req.user.role == "admin") {
-        const accId = req.params.id;
 
-        const accessory = await Accessories.findById(accId).exec();
-
-        if (!accessory) {
-          return res.status(404).json({
-            success: false,
-            msg: "Acessório não encontrada.",
-          });
-        }
-
-        const value = accessory.value || 0;
-
-        const users = await User.find({
-          $or: [
-            { accessoriesOwned: accId },
-            {
-              $or: [
-                { "accessoriesEquipped.hat": accId },
-                { "accessoriesEquipped.shirt": accId },
-                { "accessoriesEquipped.color": accId },
-                { "accessoriesEquipped.background": accId },
-              ],
-            },
-          ],
-        });
-
-        for (const user of users) {
-          user.accessoriesOwned = user.accessoriesOwned.filter(
-            (ownedId) => String(ownedId) !== String(accId)
-          );
-
-          for (let key of ["hat", "shirt", "color", "background"]) {
-            if (String(user.accessoriesEquipped[key]) === String(accId)) {
-              user.accessoriesEquipped[key] = null;
-            }
-          }
-
-          user.points += value;
-
-          await user.save();
-        }
-
-        await accessory.deleteOne();
-
-        return res.status(200).json({
-          success: true,
-          msg: `Acessório apagado com sucesso. ${users.length} utilizadores atualizados.`,
-        });
-      } else {
-        return res.status(403).json({
-          success: false,
-          msg: "Não tens permissão para aceder a esta rota.",
-        });
-      }
-    } else {
+    if (!req.user || req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
-        msg: "Tens de ter um token para aceder a esta rota.",
+        msg: req.user
+          ? 'Não tens permissão para aceder a esta rota.'
+          : 'Tens de ter um token para aceder a esta rota.',
       });
     }
+
+    const accId = req.params.id;
+    const accessory = await Accessories.findById(accId).exec();
+    if (!accessory) {
+      return res.status(404).json({
+        success: false,
+        msg: 'Acessório não encontrado.',
+      });
+    }
+
+    const value = accessory.value || 0;
+
+
+    const equipSlots = [
+      'hat',        // chapéu (Chapeu)
+      'shirt',      // camisola (Shirts)
+      'background', // fundo (Backgrounds)
+      'bigode',     // mustache (Bigode)
+      'cachecol',   // scarf (Cachecol)
+      'ouvidos',    // ears (Ouvidos)
+    ];
+
+
+    const users = await User.find({
+      $or: [
+        { accessoriesOwned: accId },
+        ...equipSlots.map(slot => ({ [`accessoriesEquipped.${slot}`]: accId })),
+      ],
+    });
+
+   
+    for (const u of users) {
+ 
+      u.accessoriesOwned = u.accessoriesOwned.filter(
+        oid => oid.toString() !== accId
+      );
+
+  
+      for (const slot of equipSlots) {
+        if (u.accessoriesEquipped[slot]?.toString() === accId) {
+          u.accessoriesEquipped[slot] = null;
+        }
+      }
+
+      // devolve os pontos do acessório apagado
+      u.points = (u.points || 0) + value;
+      await u.save();
+    }
+
+    // finalmente, apaga o acessório
+    await accessory.deleteOne();
+
+    return res.status(200).json({
+      success: true,
+      msg: `Acessório apagado com sucesso. ${users.length} utilizador(es) atualizado(s).`,
+    });
   } catch (err) {
+    console.error(err);
     return res.status(500).json({
       success: false,
-      msg: err.message || "Algum erro ocorreu ao apagar o acessório.",
+      msg: err.message || 'Algum erro ocorreu ao apagar o acessório.',
     });
   }
 };
+
 
 exports.findAll = async (req, res) => {
   try {
