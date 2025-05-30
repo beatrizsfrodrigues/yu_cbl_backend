@@ -88,7 +88,8 @@ exports.login = async (req, res) => {
 
     const user = await User.findOne({
       $or: [{ email: emailOrUsername }, { username: emailOrUsername }],
-    });
+    }).populate("accessoriesOwned");
+
     if (!user) {
       return res
         .status(401)
@@ -128,6 +129,10 @@ exports.login = async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000,
       partitioned: true,
     });
+
+    console.log(user);
+
+    console.log(userWithoutPassword);
 
     // Send user info only (no token in JSON)
     return res.status(200).json({
