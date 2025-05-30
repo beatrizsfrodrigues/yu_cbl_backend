@@ -7,7 +7,7 @@ const jwt = require("jsonwebtoken");
 const config = require("../config/db.config.js");
 const User = db.users;
 
-const Messages = require("../models/messages.model");
+const Messages = db.messages;
 const Accessory = db.accessories;
 
 exports.findAll = async (req, res) => {
