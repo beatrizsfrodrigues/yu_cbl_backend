@@ -110,7 +110,7 @@ exports.login = async (req, res) => {
     // Set token as an HTTP-only cookie
     res.cookie("token", token, {
       httpOnly: false,
-      secure: process.env.NODE_ENV === "production", // set true in production (HTTPS)
+      secure: true,
       sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000, // 1 day in ms
       path: "/",
@@ -123,7 +123,7 @@ exports.login = async (req, res) => {
     // Save to cookie
     res.cookie("loggedInUser", JSON.stringify(userWithoutPassword), {
       httpOnly: false, // frontend-accessible
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000,
       partitioned: true,
