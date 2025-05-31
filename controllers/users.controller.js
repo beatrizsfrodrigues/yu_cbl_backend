@@ -281,9 +281,7 @@ exports.buyAccessory = async (req, res) => {
   try {
     const { accessoryId } = req.body;
     if (!accessoryId) {
-      return res
-        .status(400)
-        .json({ message: "O ID do acessório é obrigatório." });
+      return res.status(400).json({ message: "O ID do acessório é obrigatório." });
     }
 
     const accessory = await Accessory.findById(accessoryId);
@@ -296,26 +294,34 @@ exports.buyAccessory = async (req, res) => {
       return res.status(404).json({ message: "Utilizador não encontrado." });
     }
 
+
+    if (user.points < accessory.value) {
+      return res.status(400).json({ message: "Estrelas insuficientes para comprar este acessório." });
+    }
+
+  
     user.accessoriesOwned = user.accessoriesOwned || [];
     if (user.accessoriesOwned.includes(accessoryId)) {
       return res.status(400).json({ message: "Acessório já adquirido." });
     }
 
+    user.points -= accessory.value;
     user.accessoriesOwned.push(accessoryId);
     await user.save();
+
     await user.populate("accessoriesOwned");
 
     return res.json({
       message: "Acessório adquirido com sucesso.",
       accessories: user.accessoriesOwned,
+      points: user.points, 
     });
   } catch (error) {
     console.error("Erro ao adquirir acessório:", error);
-    return res
-      .status(500)
-      .json({ message: "Erro ao adquirir acessório", error });
+    return res.status(500).json({ message: "Erro ao adquirir acessório", error });
   }
 };
+
 
 // para vestir os coisos
 exports.equipAccessory = async (req, res) => {
@@ -330,11 +336,11 @@ exports.equipAccessory = async (req, res) => {
     const slotMap = {
       Backgrounds: "background",
       Shirts: "shirt",
-      SkinColor: "color",
       Bigode: "bigode",
       Cachecol: "cachecol",
       Chapeu: "chapeu",
       Ouvidos: "ouvidos",
+      Oculos: "oculos",
     };
 
     const slot = slotMap[type];
@@ -394,7 +400,8 @@ exports.getEquippedAccessories = async (req, res) => {
       .populate("accessoriesEquipped.bigode")
       .populate("accessoriesEquipped.cachecol")
       .populate("accessoriesEquipped.chapeu")
-      .populate("accessoriesEquipped.ouvidos");
+      .populate("accessoriesEquipped.ouvidos")
+      .populate("accessoriesEquipped.oculos");
 
     if (!user) {
       return res.status(404).json({ message: "Utilizador não encontrado." });
@@ -414,11 +421,11 @@ exports.getEquippedAccessories = async (req, res) => {
     return res.status(200).json({
       background: formatAccessory(user.accessoriesEquipped.background),
       shirt: formatAccessory(user.accessoriesEquipped.shirt),
-      color: user.accessoriesEquipped.color,
       bigode: formatAccessory(user.accessoriesEquipped.bigode),
       cachecol: formatAccessory(user.accessoriesEquipped.cachecol),
       chapeu: formatAccessory(user.accessoriesEquipped.chapeu),
       ouvidos: formatAccessory(user.accessoriesEquipped.ouvidos),
+      oculos: formatAccessory(user.accessoriesEquipped.oculos),
     });
   } catch (err) {
     console.error("Erro ao buscar acessórios equipados:", err);

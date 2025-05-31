@@ -14,7 +14,8 @@ module.exports = (mongoose) => {
           "Bigode",
           "Cachecol",
           "Chapeu",
-          "Ouvidos"
+          "Ouvidos",
+          "Oculos",
         ],
         allowNull: false,
       },

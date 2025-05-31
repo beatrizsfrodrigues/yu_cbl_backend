@@ -168,12 +168,12 @@ exports.deleteAccessory = async (req, res) => {
 
 
     const equipSlots = [
-      'hat',        // chapéu (Chapeu)
       'shirt',      // camisola (Shirts)
       'background', // fundo (Backgrounds)
       'bigode',     // mustache (Bigode)
       'cachecol',   // scarf (Cachecol)
       'ouvidos',    // ears (Ouvidos)
+      "oculos"     // glasses (Oculos)
     ];
 
 

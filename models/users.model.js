@@ -51,7 +51,6 @@ module.exports = (mongoose) => {
           default: null,
         },
         shirt: { type: Schema.Types.ObjectId, ref: "Accessory", default: null },
-        color: { type: Number, default: 0 },
         bigode: {
           type: Schema.Types.ObjectId,
           ref: "Accessory",
@@ -72,6 +71,13 @@ module.exports = (mongoose) => {
           ref: "Accessory",
           default: null,
         },
+        oculos: {
+          type: Schema.Types.ObjectId,
+          ref: "Accessory",
+          default: null,
+        },
+
+
       },
 
       mascot: {
