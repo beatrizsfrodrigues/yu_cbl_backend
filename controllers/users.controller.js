@@ -116,8 +116,8 @@ exports.login = async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: useSecureCookies, // true only in prod and non-localhost
-      sameSite: useSecureCookies ? "none" : "lax", // none if secure, else lax
+      secure: true, // ⬅️ required for cross-site
+      sameSite: "None",
       maxAge: 24 * 60 * 60 * 1000,
       path: "/",
       partitioned: useSecureCookies,
@@ -125,8 +125,8 @@ exports.login = async (req, res) => {
 
     res.cookie("loggedInUser", JSON.stringify(userWithoutPassword), {
       httpOnly: false,
-      secure: useSecureCookies,
-      sameSite: useSecureCookies ? "none" : "lax",
+      secure: true, // ⬅️ required for cross-site
+      sameSite: "None",
       maxAge: 24 * 60 * 60 * 1000,
       partitioned: useSecureCookies,
     });
