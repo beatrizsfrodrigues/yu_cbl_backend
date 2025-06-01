@@ -104,6 +104,8 @@ exports.login = async (req, res) => {
       });
     }
 
+    const { password: _password, ...userWithoutPassword } = user.toObject();
+
     const token = jwt.sign({ id: user._id, role: user.role }, config.SECRET, {
       expiresIn: "24h",
     });
