@@ -7,6 +7,8 @@ const meRoute = require("./routes/me");
 const app = express();
 const port = process.env.PORT;
 
+app.set("trust proxy", 1); // if behind proxy (Render, Vercel, etc.)
+
 // Usa o cookieParser antes das rotas
 app.use(cookieParser());
 
