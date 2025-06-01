@@ -120,6 +120,7 @@ exports.login = async (req, res) => {
       sameSite: useSecureCookies ? "none" : "lax", // none if secure, else lax
       maxAge: 24 * 60 * 60 * 1000,
       path: "/",
+      partitioned: useSecureCookies,
     });
 
     res.cookie("loggedInUser", JSON.stringify(userWithoutPassword), {
@@ -127,6 +128,7 @@ exports.login = async (req, res) => {
       secure: useSecureCookies,
       sameSite: useSecureCookies ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
+      partitioned: useSecureCookies,
     });
 
     // Send user info only (no token in JSON)
