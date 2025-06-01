@@ -108,21 +108,18 @@ exports.login = async (req, res) => {
       expiresIn: "24h",
     });
 
-    const originHost = req.headers.origin
-      ? new URL(req.headers.origin).hostname
-      : null;
+    const isLocalhost = req.headers.origin?.includes("localhost");
+    const useSecureCookies = !isLocalhost;
 
-    const isSecureContext =
-      req.secure || req.headers["x-forwarded-proto"] === "https";
-    const isLocalhost =
-      originHost === "localhost" || originHost?.startsWith("127.");
-    const useSecureCookies = isSecureContext && !isLocalhost;
+    console.log(isLocalhost);
+
+    console.log(useSecureCookies);
 
     // Set token as an HTTP-only cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: useSecureCookies,
-      sameSite: useSecureCookies ? "none" : "lax",
+      secure: true,
+      sameSite: "None",
       maxAge: 24 * 60 * 60 * 1000, // 1 day in ms
       path: "/",
       // partitioned: true,
@@ -134,8 +131,8 @@ exports.login = async (req, res) => {
     // Save to cookie
     res.cookie("loggedInUser", JSON.stringify(userWithoutPassword), {
       httpOnly: false,
-      secure: useSecureCookies,
-      sameSite: useSecureCookies ? "none" : "lax",
+      secure: true,
+      sameSite: "None",
       maxAge: 24 * 60 * 60 * 1000,
       // partitioned: true,
     });
