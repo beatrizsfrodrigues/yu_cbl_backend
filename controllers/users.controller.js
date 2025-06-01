@@ -104,35 +104,32 @@ exports.login = async (req, res) => {
       });
     }
 
+    const { password: _password, ...userWithoutPassword } = user.toObject();
+
     const token = jwt.sign({ id: user._id, role: user.role }, config.SECRET, {
       expiresIn: "24h",
     });
 
-    // Set token as an HTTP-only cookie
+    const useSecureCookies = process.env.NODE_ENV === "production";
+
+    console.log(useSecureCookies);
+
     res.cookie("token", token, {
-      httpOnly: false,
-      secure: true,
-      sameSite: "none",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day in ms
-      path: "/",
-      partitioned: true,
-    });
-
-    // Create a copy of the user object and remove the password
-    const { password: _pwd, ...userWithoutPassword } = user.toObject();
-
-    // Save to cookie
-    res.cookie("loggedInUser", JSON.stringify(userWithoutPassword), {
-      httpOnly: false, // frontend-accessible
-      secure: true,
-      sameSite: "none",
+      httpOnly: true,
+      secure: true, // ⬅️ required for cross-site
+      sameSite: "None",
       maxAge: 24 * 60 * 60 * 1000,
-      partitioned: true,
+      path: "/",
+      partitioned: useSecureCookies,
     });
 
-    console.log(user);
-
-    console.log(userWithoutPassword);
+    res.cookie("loggedInUser", JSON.stringify(userWithoutPassword), {
+      httpOnly: false,
+      secure: true, // ⬅️ required for cross-site
+      sameSite: "None",
+      maxAge: 24 * 60 * 60 * 1000,
+      partitioned: useSecureCookies,
+    });
 
     // Send user info only (no token in JSON)
     return res.status(200).json({
@@ -281,7 +278,9 @@ exports.buyAccessory = async (req, res) => {
   try {
     const { accessoryId } = req.body;
     if (!accessoryId) {
-      return res.status(400).json({ message: "O ID do acessório é obrigatório." });
+      return res
+        .status(400)
+        .json({ message: "O ID do acessório é obrigatório." });
     }
 
     const accessory = await Accessory.findById(accessoryId);
@@ -294,12 +293,12 @@ exports.buyAccessory = async (req, res) => {
       return res.status(404).json({ message: "Utilizador não encontrado." });
     }
 
-
     if (user.points < accessory.value) {
-      return res.status(400).json({ message: "Estrelas insuficientes para comprar este acessório." });
+      return res.status(400).json({
+        message: "Estrelas insuficientes para comprar este acessório.",
+      });
     }
 
-  
     user.accessoriesOwned = user.accessoriesOwned || [];
     if (user.accessoriesOwned.includes(accessoryId)) {
       return res.status(400).json({ message: "Acessório já adquirido." });
@@ -314,14 +313,15 @@ exports.buyAccessory = async (req, res) => {
     return res.json({
       message: "Acessório adquirido com sucesso.",
       accessories: user.accessoriesOwned,
-      points: user.points, 
+      points: user.points,
     });
   } catch (error) {
     console.error("Erro ao adquirir acessório:", error);
-    return res.status(500).json({ message: "Erro ao adquirir acessório", error });
+    return res
+      .status(500)
+      .json({ message: "Erro ao adquirir acessório", error });
   }
 };
-
 
 // para vestir os coisos
 exports.equipAccessory = async (req, res) => {
