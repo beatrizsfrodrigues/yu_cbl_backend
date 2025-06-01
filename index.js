@@ -5,27 +5,33 @@ const cookieParser = require("cookie-parser");
 const meRoute = require("./routes/me");
 
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
 
-app.set("trust proxy", 1); // if behind proxy (Render, Vercel, etc.)
+// ✅ Trust proxy is REQUIRED for secure cookies over HTTPS on platforms like Render
+app.set("trust proxy", 1);
 
-// Usa o cookieParser antes das rotas
+// ✅ Parse cookies early
 app.use(cookieParser());
 
-// ...restante configuração...
+// ✅ Parse JSON bodies
+app.use(express.json());
 
+// ✅ Define all allowed origins (don't forget to add your real Vercel frontend domain too)
 const allowedOrigins = [
   process.env.CLIENT_URL,
   process.env.ADMIN_URL,
   process.env.VERCEL_URL,
   "http://localhost:3000",
   "http://localhost:3001",
-].filter(Boolean);
+].filter(Boolean); // removes undefined/null
 
+// ✅ Proper CORS middleware
 app.use(
   cors({
     origin: function (origin, callback) {
       console.log("CORS origin check:", origin);
+
+      // Some requests (like Postman or server-to-server) may have no origin
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -33,18 +39,16 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true,
+    credentials: true, // 🔥 Required to receive/send cookies cross-origin
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-app.use(express.json());
-
-// Rotas
+// ✅ ROUTES
 app.use(meRoute);
 
-app.get("/", function (req, res) {
+app.get("/", (req, res) => {
   res.status(200).json({ message: "home" });
 });
 
@@ -56,12 +60,14 @@ app.use("/preset-messages", require("./routes/presetMessages.routes.js"));
 app.use("/forms", require("./routes/form.routes.js"));
 app.use("/form-answers", require("./routes/formAnswers.routes.js"));
 
-app.all("*", function (req, res) {
+// ✅ 404 fallback
+app.all("*", (req, res) => {
   res.status(404).json({ message: "Endpoint not found" });
 });
 
-const server = app.listen(port || 3000, () =>
-  console.log(`App listening on port ${port || 3000}`)
+// ✅ Start server
+const server = app.listen(port, () =>
+  console.log(`✅ Server running on port ${port}`)
 );
 
 module.exports = { app, server };
