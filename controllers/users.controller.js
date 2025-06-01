@@ -110,7 +110,7 @@ exports.login = async (req, res) => {
 
     // Set token as an HTTP-only cookie
     res.cookie("token", token, {
-      httpOnly: false,
+      httpOnly: true,
       secure: true,
       sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000, // 1 day in ms
@@ -123,7 +123,7 @@ exports.login = async (req, res) => {
 
     // Save to cookie
     res.cookie("loggedInUser", JSON.stringify(userWithoutPassword), {
-      httpOnly: false, // frontend-accessible
+      httpOnly: false,
       secure: true,
       sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000,
@@ -281,7 +281,9 @@ exports.buyAccessory = async (req, res) => {
   try {
     const { accessoryId } = req.body;
     if (!accessoryId) {
-      return res.status(400).json({ message: "O ID do acessório é obrigatório." });
+      return res
+        .status(400)
+        .json({ message: "O ID do acessório é obrigatório." });
     }
 
     const accessory = await Accessory.findById(accessoryId);
@@ -294,12 +296,12 @@ exports.buyAccessory = async (req, res) => {
       return res.status(404).json({ message: "Utilizador não encontrado." });
     }
 
-
     if (user.points < accessory.value) {
-      return res.status(400).json({ message: "Estrelas insuficientes para comprar este acessório." });
+      return res.status(400).json({
+        message: "Estrelas insuficientes para comprar este acessório.",
+      });
     }
 
-  
     user.accessoriesOwned = user.accessoriesOwned || [];
     if (user.accessoriesOwned.includes(accessoryId)) {
       return res.status(400).json({ message: "Acessório já adquirido." });
@@ -314,14 +316,15 @@ exports.buyAccessory = async (req, res) => {
     return res.json({
       message: "Acessório adquirido com sucesso.",
       accessories: user.accessoriesOwned,
-      points: user.points, 
+      points: user.points,
     });
   } catch (error) {
     console.error("Erro ao adquirir acessório:", error);
-    return res.status(500).json({ message: "Erro ao adquirir acessório", error });
+    return res
+      .status(500)
+      .json({ message: "Erro ao adquirir acessório", error });
   }
 };
-
 
 // para vestir os coisos
 exports.equipAccessory = async (req, res) => {
