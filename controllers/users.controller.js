@@ -75,6 +75,7 @@ exports.createUser = async (req, res) => {
   }
 };
 
+
 exports.login = async (req, res) => {
   try {
     const { emailOrUsername, password } = req.body;
@@ -86,6 +87,7 @@ exports.login = async (req, res) => {
       });
     }
 
+
     const user = await User.findOne({
       $or: [{ email: emailOrUsername }, { username: emailOrUsername }],
     }).populate("accessoriesOwned");
@@ -93,56 +95,43 @@ exports.login = async (req, res) => {
     if (!user) {
       return res
         .status(401)
-        .json({ message: "Email ou nome de utilizador está incorreto." });
+        .json({ success: false, msg: "Email ou nome de utilizador está incorreto." });
     }
 
+   
     if (!bcrypt.compareSync(password, user.password)) {
       return res.status(401).json({
         success: false,
-        accessToken: null,
         msg: "Credenciais inválidas.",
       });
     }
 
+   
     const { password: _password, ...userWithoutPassword } = user.toObject();
 
-    const token = jwt.sign({ id: user._id, role: user.role }, config.SECRET, {
-      expiresIn: "24h",
-    });
 
-    const useSecureCookies = process.env.NODE_ENV === "production";
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      config.SECRET,
+      { expiresIn: "24h" }
+    );
 
-    console.log(useSecureCookies);
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: true, // ⬅️ required for cross-site
-      sameSite: "None",
-      maxAge: 24 * 60 * 60 * 1000,
-      path: "/",
-      partitioned: useSecureCookies,
-    });
-
-    res.cookie("loggedInUser", JSON.stringify(userWithoutPassword), {
-      httpOnly: false,
-      secure: true, // ⬅️ required for cross-site
-      sameSite: "None",
-      maxAge: 24 * 60 * 60 * 1000,
-      partitioned: useSecureCookies,
-    });
-
-    // Send user info only (no token in JSON)
     return res.status(200).json({
+      success: true,
       message: "Login efetuado com sucesso!",
-      userWithoutPassword,
+      token,                
+      user: userWithoutPassword
     });
   } catch (error) {
     console.error(error);
     return res
       .status(500)
-      .json({ message: "Ocorreu um erro ao efetuar login.", error });
+      .json({ success: false, message: "Ocorreu um erro ao efetuar login.", error });
   }
 };
+
+
 
 exports.updateUser = async (req, res) => {
   try {

@@ -32,65 +32,86 @@ exports.getTasksStats = async (req, res) => {
   }
 };
 
-
 exports.getTasks = async (req, res) => {
   try {
-    if (req.user) {
-      const requestedUserId = req.query.userId;
-      let query = {};
-      if (req.user.role === "user") {
-        let loggedUser = await User.findOne({ _id: req.user.id }).exec();
-        const ownId = loggedUser._id.toString();
-        const partnerId = loggedUser.partnerId.toString();
-        const allowedIds = [ownId, partnerId];
-
-        console.log(req.query.userId);
-        console.log(req.user.id);
-        console.log(partnerId);
-
-        if (!requestedUserId || !allowedIds.includes(requestedUserId)) {
-          return res.status(403).json({
-            success: false,
-            msg: "Não tens permissão para ver tarefas deste utilizador.",
-          });
-        }
-        if (!req.query.userId) {
-          query.userId = req.user.id;
-        } else {
-          query.userId = req.query.userId;
-        }
-
-        if (!req.user.id || !allowedIds.includes(query.userId)) {
-          return res.status(403).json({
-            success: false,
-            msg: "Não tens permissão para ver tarefas deste utilizador.",
-          });
-        }
-      }
-
-      if (req.user.role === "admin" && req.query.userId) {
-        query.userId = req.query.userId;
-      }
-
-      if (req.query.completed) query.completed = req.query.completed === "true";
-      if (req.query.verified) query.verified = req.query.verified === "true";
-
-      let tasks = await Task.find(query).exec();
-
-      res.status(200).json({ success: true, tasks });
-    } else {
+    if (!req.user) {
       return res.status(403).json({
         success: false,
         msg: "Tens de ter um token para aceder a esta rota.",
       });
     }
+
+    const requestedUserId = req.query.userId;
+    let query = {};
+
+
+    if (req.user.role === "user") {
+
+      const loggedUser = await User.findById(req.user.id).exec();
+      if (!loggedUser) {
+        return res.status(404).json({
+          success: false,
+          msg: "Utilizador não encontrado.",
+        });
+      }
+
+      const ownId = loggedUser._id.toString();
+
+      const partnerId = loggedUser.partnerId
+        ? loggedUser.partnerId.toString()
+        : null;
+
+      const allowedIds = partnerId ? [ownId, partnerId] : [ownId];
+
+   
+      if (requestedUserId && !allowedIds.includes(requestedUserId)) {
+        return res.status(403).json({
+          success: false,
+          msg: "Não tens permissão para ver tarefas deste utilizador.",
+        });
+      }
+
+  
+      if (!requestedUserId) {
+        query.userId = req.user.id;
+      } else {
+        query.userId = requestedUserId;
+      }
+
+
+      if (!allowedIds.includes(query.userId)) {
+        return res.status(403).json({
+          success: false,
+          msg: "Não tens permissão para ver tarefas deste utilizador.",
+        });
+      }
+    }
+
+
+    if (req.user.role === "admin" && req.query.userId) {
+      query.userId = req.query.userId;
+    }
+
+
+    if (req.query.completed) {
+      query.completed = req.query.completed === "true";
+    }
+    if (req.query.verified) {
+      query.verified = req.query.verified === "true";
+    }
+
+ 
+    const tasks = await Task.find(query).exec();
+    return res.status(200).json({ success: true, tasks });
   } catch (err) {
-    res.status(500).json({
+    console.error("Erro em getTasks:", err);
+    return res.status(500).json({
       success: false,
       msg: err.message || "Algum erro ocorreu ao encontrar as tarefas.",
     });
   }
 };
+
 
 exports.createTask = async (req, res) => {
   try {
