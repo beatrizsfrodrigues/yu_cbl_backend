@@ -1,11 +1,18 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
+const meRoute = require("./routes/me");
+
 const app = express();
 const port = process.env.PORT;
-const cookieParser = require("cookie-parser");
 
+app.set("trust proxy", 1); // if behind proxy (Render, Vercel, etc.)
+
+// Usa o cookieParser antes das rotas
 app.use(cookieParser());
+
+// ...restante configuração...
 
 const allowedOrigins = [
   process.env.CLIENT_URL,
@@ -33,6 +40,9 @@ app.use(
 );
 
 app.use(express.json());
+
+// Rotas
+app.use(meRoute);
 
 app.get("/", function (req, res) {
   res.status(200).json({ message: "home" });
