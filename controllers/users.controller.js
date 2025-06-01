@@ -22,6 +22,7 @@ exports.findAll = async (req, res) => {
   }
 };
 
+
 exports.createUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -46,10 +47,13 @@ exports.createUser = async (req, res) => {
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
       let result = "";
       for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
+        result += chars.charAt(
+          Math.floor(Math.random() * chars.length)
+        );
       }
       return result;
     };
+
 
     const newUser = await User.create({
       username,
@@ -59,16 +63,25 @@ exports.createUser = async (req, res) => {
       role: "user",
     });
 
+    const token = jwt.sign(
+      { id: newUser._id, role: newUser.role },
+      config.SECRET,
+      { expiresIn: "24h" }
+    );
+
+
     return res.status(201).json({
       message: "Utilizador registado com sucesso!",
       user: {
         _id: newUser._id,
         username: newUser.username,
         email: newUser.email,
+        role: newUser.role,
       },
+      token,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Erro no createUser:", error);
     return res
       .status(500)
       .json({ message: "Ocorreu um erro ao registar o utilizador.", error });
