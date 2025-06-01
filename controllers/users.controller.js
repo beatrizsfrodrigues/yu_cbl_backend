@@ -119,7 +119,7 @@ exports.login = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,
       secure: useSecureCookies,
-      sameSite: useSecureCookies ? "none" : "lax",
+      sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000, // 1 day in ms
       path: "/",
       // partitioned: true,
@@ -132,7 +132,7 @@ exports.login = async (req, res) => {
     res.cookie("loggedInUser", JSON.stringify(userWithoutPassword), {
       httpOnly: false,
       secure: useSecureCookies,
-      sameSite: useSecureCookies ? "none" : "lax",
+      sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000,
       // partitioned: true,
     });
