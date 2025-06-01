@@ -110,9 +110,9 @@ exports.login = async (req, res) => {
       expiresIn: "24h",
     });
 
-    const isLocalhost = req.headers.origin?.includes("localhost");
-    const useSecureCookies =
-      !isLocalhost && process.env.NODE_ENV === "production";
+    const useSecureCookies = process.env.NODE_ENV === "production";
+
+    console.log(useSecureCookies);
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -128,10 +128,6 @@ exports.login = async (req, res) => {
       sameSite: useSecureCookies ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
-
-    console.log(user);
-
-    console.log(userWithoutPassword);
 
     // Send user info only (no token in JSON)
     return res.status(200).json({
