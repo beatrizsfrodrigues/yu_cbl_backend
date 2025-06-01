@@ -109,32 +109,22 @@ exports.login = async (req, res) => {
     });
 
     const isLocalhost = req.headers.origin?.includes("localhost");
-    const useSecureCookies = !isLocalhost;
+    const useSecureCookies =
+      !isLocalhost && process.env.NODE_ENV === "production";
 
-    console.log(isLocalhost);
-
-    console.log(useSecureCookies);
-
-    // Set token as an HTTP-only cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day in ms
+      secure: useSecureCookies, // true only in prod and non-localhost
+      sameSite: useSecureCookies ? "none" : "lax", // none if secure, else lax
+      maxAge: 24 * 60 * 60 * 1000,
       path: "/",
-      // partitioned: true,
     });
 
-    // Create a copy of the user object and remove the password
-    const { password: _pwd, ...userWithoutPassword } = user.toObject();
-
-    // Save to cookie
     res.cookie("loggedInUser", JSON.stringify(userWithoutPassword), {
       httpOnly: false,
-      secure: true,
-      sameSite: "none",
+      secure: useSecureCookies,
+      sameSite: useSecureCookies ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
-      // partitioned: true,
     });
 
     console.log(user);
