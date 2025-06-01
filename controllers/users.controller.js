@@ -125,7 +125,7 @@ exports.login = async (req, res) => {
       sameSite: useSecureCookies ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000, // 1 day in ms
       path: "/",
-      partitioned: true,
+      // partitioned: true,
     });
 
     // Create a copy of the user object and remove the password
@@ -137,7 +137,7 @@ exports.login = async (req, res) => {
       secure: useSecureCookies,
       sameSite: useSecureCookies ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
-      partitioned: true,
+      // partitioned: true,
     });
 
     console.log(user);
