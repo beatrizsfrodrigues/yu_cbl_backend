@@ -22,24 +22,6 @@ exports.findAll = async (req, res) => {
   }
 };
 
-const { OAuth2Client } = require("google-auth-library");
-const client = new OAuth2Client(
-  "470997168294-gih5icq4crbtnktfugobt0tvj8cplfdf.apps.googleusercontent.com"
-);
-
-async function verifyGoogleToken(token) {
-  const ticket = await client.verifyIdToken({
-    idToken: token,
-    audience:
-      "470997168294-gih5icq4crbtnktfugobt0tvj8cplfdf.apps.googleusercontent.com",
-  });
-  const payload = ticket.getPayload();
-  // Aqui tens o email e o nome:
-  const email = payload.email;
-  const name = payload.name;
-  return { email, name };
-}
-
 exports.createUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -77,24 +59,16 @@ exports.createUser = async (req, res) => {
       role: "user",
     });
 
-    const token = jwt.sign(
-      { id: newUser._id, role: newUser.role },
-      config.SECRET,
-      { expiresIn: "24h" }
-    );
-
     return res.status(201).json({
       message: "Utilizador registado com sucesso!",
       user: {
         _id: newUser._id,
         username: newUser.username,
         email: newUser.email,
-        role: newUser.role,
       },
-      token,
     });
   } catch (error) {
-    console.error("Erro no createUser:", error);
+    console.error(error);
     return res
       .status(500)
       .json({ message: "Ocorreu um erro ao registar o utilizador.", error });
@@ -117,38 +91,59 @@ exports.login = async (req, res) => {
     }).populate("accessoriesOwned");
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        msg: "Email ou nome de utilizador está incorreto.",
-      });
+      return res
+        .status(401)
+        .json({ message: "Email ou nome de utilizador está incorreto." });
     }
 
     if (!bcrypt.compareSync(password, user.password)) {
       return res.status(401).json({
         success: false,
+        accessToken: null,
         msg: "Credenciais inválidas.",
       });
     }
-
-    const { password: _password, ...userWithoutPassword } = user.toObject();
 
     const token = jwt.sign({ id: user._id, role: user.role }, config.SECRET, {
       expiresIn: "24h",
     });
 
+    // Set token as an HTTP-only cookie
+    res.cookie("token", token, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "none",
+      maxAge: 24 * 60 * 60 * 1000, // 1 day in ms
+      path: "/",
+      partitioned: true,
+    });
+
+    // Create a copy of the user object and remove the password
+    const { password: _pwd, ...userWithoutPassword } = user.toObject();
+
+    // Save to cookie
+    res.cookie("loggedInUser", JSON.stringify(userWithoutPassword), {
+      httpOnly: false, // frontend-accessible
+      secure: true,
+      sameSite: "none",
+      maxAge: 24 * 60 * 60 * 1000,
+      partitioned: true,
+    });
+
+    console.log(user);
+
+    console.log(userWithoutPassword);
+
+    // Send user info only (no token in JSON)
     return res.status(200).json({
-      success: true,
       message: "Login efetuado com sucesso!",
-      token,
-      user: userWithoutPassword,
+      userWithoutPassword,
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
-      success: false,
-      message: "Ocorreu um erro ao efetuar login.",
-      error,
-    });
+    return res
+      .status(500)
+      .json({ message: "Ocorreu um erro ao efetuar login.", error });
   }
 };
 
@@ -302,9 +297,11 @@ exports.buyAccessory = async (req, res) => {
     }
 
     if (user.points < accessory.value) {
-      return res.status(400).json({
-        message: "Estrelas insuficientes para comprar este acessório.",
-      });
+      return res
+        .status(400)
+        .json({
+          message: "Estrelas insuficientes para comprar este acessório.",
+        });
     }
 
     user.accessoriesOwned = user.accessoriesOwned || [];
