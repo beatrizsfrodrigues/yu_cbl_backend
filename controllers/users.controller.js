@@ -22,6 +22,20 @@ exports.findAll = async (req, res) => {
   }
 };
 
+const { OAuth2Client } = require("google-auth-library");
+const client = new OAuth2Client(CLIENT_ID);
+
+async function verifyGoogleToken(token) {
+  const ticket = await client.verifyIdToken({
+    idToken: token,
+    audience: CLIENT_ID,
+  });
+  const payload = ticket.getPayload();
+  // Aqui tens o email e o nome:
+  const email = payload.email;
+  const name = payload.name;
+  return { email, name };
+}
 
 exports.createUser = async (req, res) => {
   try {
@@ -47,13 +61,10 @@ exports.createUser = async (req, res) => {
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
       let result = "";
       for (let i = 0; i < length; i++) {
-        result += chars.charAt(
-          Math.floor(Math.random() * chars.length)
-        );
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
       }
       return result;
     };
-
 
     const newUser = await User.create({
       username,
@@ -68,7 +79,6 @@ exports.createUser = async (req, res) => {
       config.SECRET,
       { expiresIn: "24h" }
     );
-
 
     return res.status(201).json({
       message: "Utilizador registado com sucesso!",
@@ -88,7 +98,6 @@ exports.createUser = async (req, res) => {
   }
 };
 
-
 exports.login = async (req, res) => {
   try {
     const { emailOrUsername, password } = req.body;
@@ -100,7 +109,6 @@ exports.login = async (req, res) => {
       });
     }
 
-
     const user = await User.findOne({
       $or: [{ email: emailOrUsername }, { username: emailOrUsername }],
     }).populate("accessoriesOwned");
@@ -108,10 +116,12 @@ exports.login = async (req, res) => {
     if (!user) {
       return res
         .status(401)
-        .json({ success: false, msg: "Email ou nome de utilizador está incorreto." });
+        .json({
+          success: false,
+          msg: "Email ou nome de utilizador está incorreto.",
+        });
     }
 
-   
     if (!bcrypt.compareSync(password, user.password)) {
       return res.status(401).json({
         success: false,
@@ -119,32 +129,29 @@ exports.login = async (req, res) => {
       });
     }
 
-   
     const { password: _password, ...userWithoutPassword } = user.toObject();
 
-
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      config.SECRET,
-      { expiresIn: "24h" }
-    );
-
+    const token = jwt.sign({ id: user._id, role: user.role }, config.SECRET, {
+      expiresIn: "24h",
+    });
 
     return res.status(200).json({
       success: true,
       message: "Login efetuado com sucesso!",
-      token,                
-      user: userWithoutPassword
+      token,
+      user: userWithoutPassword,
     });
   } catch (error) {
     console.error(error);
     return res
       .status(500)
-      .json({ success: false, message: "Ocorreu um erro ao efetuar login.", error });
+      .json({
+        success: false,
+        message: "Ocorreu um erro ao efetuar login.",
+        error,
+      });
   }
 };
-
-
 
 exports.updateUser = async (req, res) => {
   try {
