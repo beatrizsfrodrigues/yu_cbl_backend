@@ -23,12 +23,15 @@ exports.findAll = async (req, res) => {
 };
 
 const { OAuth2Client } = require("google-auth-library");
-const client = new OAuth2Client(CLIENT_ID);
+const client = new OAuth2Client(
+  "470997168294-gih5icq4crbtnktfugobt0tvj8cplfdf.apps.googleusercontent.com"
+);
 
 async function verifyGoogleToken(token) {
   const ticket = await client.verifyIdToken({
     idToken: token,
-    audience: CLIENT_ID,
+    audience:
+      "470997168294-gih5icq4crbtnktfugobt0tvj8cplfdf.apps.googleusercontent.com",
   });
   const payload = ticket.getPayload();
   // Aqui tens o email e o nome:
@@ -114,12 +117,10 @@ exports.login = async (req, res) => {
     }).populate("accessoriesOwned");
 
     if (!user) {
-      return res
-        .status(401)
-        .json({
-          success: false,
-          msg: "Email ou nome de utilizador está incorreto.",
-        });
+      return res.status(401).json({
+        success: false,
+        msg: "Email ou nome de utilizador está incorreto.",
+      });
     }
 
     if (!bcrypt.compareSync(password, user.password)) {
@@ -143,13 +144,11 @@ exports.login = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Ocorreu um erro ao efetuar login.",
-        error,
-      });
+    return res.status(500).json({
+      success: false,
+      message: "Ocorreu um erro ao efetuar login.",
+      error,
+    });
   }
 };
 
