@@ -3,16 +3,14 @@ const Task = db.tasks;
 const User = db.users;
 const Message = db.messages;
 
-
 exports.getTasksStats = async (req, res) => {
   try {
- 
-    if (!req.user || req.user.role !== 'admin') {
+    if (!req.user || req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
         msg: req.user
-          ? 'Não tens permissão para aceder a esta rota.'
-          : 'Tens de ter um token para aceder a esta rota.',
+          ? "Não tens permissão para aceder a esta rota."
+          : "Tens de ter um token para aceder a esta rota.",
       });
     }
     const totalTasks = await Task.countDocuments({});
@@ -24,10 +22,10 @@ exports.getTasksStats = async (req, res) => {
       totalCompletedTasks,
     });
   } catch (err) {
-    console.error('Erro em getTasksStats:', err);
+    console.error("Erro em getTasksStats:", err);
     return res.status(500).json({
       success: false,
-      msg: err.message || 'Erro ao obter estatísticas de tarefas.',
+      msg: err.message || "Erro ao obter estatísticas de tarefas.",
     });
   }
 };
@@ -44,9 +42,7 @@ exports.getTasks = async (req, res) => {
     const requestedUserId = req.query.userId;
     let query = {};
 
-
     if (req.user.role === "user") {
-
       const loggedUser = await User.findById(req.user.id).exec();
       if (!loggedUser) {
         return res.status(404).json({
@@ -63,7 +59,6 @@ exports.getTasks = async (req, res) => {
 
       const allowedIds = partnerId ? [ownId, partnerId] : [ownId];
 
-   
       if (requestedUserId && !allowedIds.includes(requestedUserId)) {
         return res.status(403).json({
           success: false,
@@ -71,13 +66,11 @@ exports.getTasks = async (req, res) => {
         });
       }
 
-  
       if (!requestedUserId) {
         query.userId = req.user.id;
       } else {
         query.userId = requestedUserId;
       }
-
 
       if (!allowedIds.includes(query.userId)) {
         return res.status(403).json({
@@ -87,11 +80,9 @@ exports.getTasks = async (req, res) => {
       }
     }
 
-
     if (req.user.role === "admin" && req.query.userId) {
       query.userId = req.query.userId;
     }
-
 
     if (req.query.completed) {
       query.completed = req.query.completed === "true";
@@ -100,9 +91,27 @@ exports.getTasks = async (req, res) => {
       query.verified = req.query.verified === "true";
     }
 
- 
-    const tasks = await Task.find(query).exec();
-    return res.status(200).json({ success: true, tasks });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const total = await Task.countDocuments(query);
+    const tasks = await Task.find(query)
+      .sort({ createdAt: -1 }) // ordena mais recentes primeiro, opcional
+      .skip(skip)
+      .limit(limit)
+      .exec();
+
+    return res
+      .status(200)
+      .json({
+        success: true,
+        tasks,
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      });
   } catch (err) {
     console.error("Erro em getTasks:", err);
     return res.status(500).json({
@@ -111,7 +120,6 @@ exports.getTasks = async (req, res) => {
     });
   }
 };
-
 
 exports.createTask = async (req, res) => {
   try {
