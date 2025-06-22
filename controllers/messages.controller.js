@@ -1,7 +1,6 @@
 const db = require("../models");
 const Message = db.messages;
 
-
 const User = db.users;
 
 // [2] Adiciona mensagem a uma conversa existente
@@ -121,46 +120,68 @@ exports.getChat = async (req, res) => {
 // [4] Retorna todas as conversas de um user
 exports.getChatByUser = async (req, res) => {
   try {
-    if (req.user) {
-      const { userId } = req.params;
-
-      let loggedUser = await User.findOne({ _id: req.user.id }).exec();
-
-      const chat = await Message.findOne({
-        usersId: userId,
-      });
-
-      if (!chat) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Conversa não encontrada." });
-      }
-
-      if (
-        chat.usersId[0].toString() !== userId.toString() &&
-        chat.usersId[1].toString() !== userId.toString() &&
-        loggedUser._id.toString() !== userId.toString()
-      ) {
-        return res.status(403).json({
-          success: false,
-          message: "Não tens permissão para ver esta conversa.",
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        chat,
-      });
-    } else {
+    if (!req.user) {
       return res.status(403).json({
         success: false,
         msg: "Tens de ter um token para aceder a esta rota.",
       });
     }
+
+    const { userId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const loggedUser = await User.findById(req.user.id).exec();
+
+    const query = {
+      usersId: { $all: [req.user.id, userId] },
+    };
+
+    const chat = await Message.findOne({
+      usersId: { $all: [req.user.id, userId] },
+    });
+
+    if (!chat || !chat.messages || chat.messages.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Conversa não encontrada ou sem mensagens.",
+      });
+    }
+
+    const totalMessages = chat.messages.length;
+
+    const sortedMessages = [...chat.messages].sort((a, b) => +b.date - +a.date);
+    console.log("sortedMessages", sortedMessages);
+
+    const paginatedMessages = sortedMessages.slice(skip, skip + limit);
+
+    console.log("paginatedMessages", paginatedMessages);
+
+    // Check permission using first message’s userIds
+    const chatUsers = chat.usersId.map((id) => id.toString());
+    if (
+      !chatUsers.includes(req.user.id.toString()) ||
+      !chatUsers.includes(userId.toString())
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Não tens permissão para ver esta conversa.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      chatId: chat._id,
+      totalMessages,
+      currentPage: page,
+      totalPages: Math.ceil(totalMessages / limit),
+      messages: paginatedMessages,
+    });
   } catch (err) {
     return res.status(500).json({
       success: false,
-      msg: err.message || "Algum erro ocorreu ao encontrar a conversa.",
+      msg: err.message || "Erro ao obter a conversa.",
     });
   }
 };
