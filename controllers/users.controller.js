@@ -146,6 +146,10 @@ exports.updateUser = async (req, res) => {
       return res.status(400).json({ message: "Nenhum dado para atualizar." });
     }
 
+    if (updateData.password) {
+      updateData.password = bcrypt.hashSync(updateData.password, 10);
+    }
+
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
       new: true,
     });
