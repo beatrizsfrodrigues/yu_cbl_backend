@@ -97,21 +97,23 @@ exports.getTasks = async (req, res) => {
 
     const total = await Task.countDocuments(query);
     const tasks = await Task.find(query)
-      .sort({ createdAt: -1 }) // ordena mais recentes primeiro, opcional
+      .sort({ _id: -1 })
       .skip(skip)
       .limit(limit)
       .exec();
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        tasks,
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      });
+    console.log(tasks);
+    console.log("limit", limit);
+    console.log("page", page);
+
+    return res.status(200).json({
+      success: true,
+      tasks,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (err) {
     console.error("Erro em getTasks:", err);
     return res.status(500).json({
