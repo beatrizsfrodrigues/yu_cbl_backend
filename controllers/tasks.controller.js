@@ -102,9 +102,9 @@ exports.getTasks = async (req, res) => {
       .limit(limit)
       .exec();
 
-    console.log(tasks);
     console.log("limit", limit);
     console.log("page", page);
+    console.log("Query:", query);
 
     return res.status(200).json({
       success: true,
