@@ -26,7 +26,7 @@ module.exports = (mongoose) => {
         type: String,
         trim: true,
         allowNull: false,
-        required: true,
+        required: false,
       },
       points: {
         type: Number,
@@ -76,14 +76,16 @@ module.exports = (mongoose) => {
           ref: "Accessory",
           default: null,
         },
-
-
       },
-
       mascot: {
         type: String,
         default:
           "https://res.cloudinary.com/dinzra2oo/image/upload/v1748611193/YU-119_weajgx.svg",
+      },
+      googleId: {
+        type: String,
+        unique: true,
+        sparse: true,
       },
     },
     { timestamps: false }
