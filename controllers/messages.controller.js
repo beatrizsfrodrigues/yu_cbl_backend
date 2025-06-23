@@ -237,3 +237,18 @@ exports.getAllMessages = async (req, res) => {
     });
   }
 };
+
+exports.markAllAsSeen = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    // Atualiza todas as mensagens recebidas por este user e ainda não vistas
+    const result = await Message.updateMany(
+      { "messages.receiverId": userId, "messages.seen": false },
+      { $set: { "messages.$[elem].seen": true } },
+      { arrayFilters: [{ "elem.receiverId": userId, "elem.seen": false }] }
+    );
+    res.json({ success: true, result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};

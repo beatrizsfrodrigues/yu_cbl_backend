@@ -3,6 +3,7 @@ const router = express.Router();
 
 const messagesController = require("../controllers/messages.controller");
 const authMiddleware = require("../middlewares/auth.middleware");
+const { messages } = require("../models");
 
 router.use((req, res, next) => {
   const start = Date.now();
@@ -19,8 +20,11 @@ router.get(
   "/all",
   authMiddleware,
   (req, res, next) => {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Acesso negado. Somente administradores podem acessar essa rota.' });
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        message:
+          "Acesso negado. Somente administradores podem acessar essa rota.",
+      });
     }
     next();
   },
@@ -35,5 +39,11 @@ router
 router.get("/user/:userId", authMiddleware, messagesController.getChatByUser);
 
 // router.post('/', authMiddleware, messagesController.createConversation);
+
+router.patch(
+  "/mark-seen/:userId",
+  authMiddleware,
+  messagesController.markAllAsSeen
+);
 
 module.exports = router;
