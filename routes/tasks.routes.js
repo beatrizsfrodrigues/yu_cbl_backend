@@ -15,18 +15,22 @@ router.use((req, res, next) => {
   next();
 });
 
-
-router.get(
-  "/stats",
-  authMiddleware,
-  tasksController.getTasksStats
-);
-
+router.get("/stats", authMiddleware, tasksController.getTasksStats);
 
 router
   .route("/")
   .get(authMiddleware, tasksController.getTasks)
   .post(authMiddleware, tasksController.createTask);
+
+router.get("/notifications", authMiddleware, async (req, res) => {
+  const userId = req.query.userId;
+  const tasks = await Task.find({
+    userId,
+    completed: true,
+    notification: true,
+  });
+  res.json({ tasks });
+});
 
 router
   .route("/:id")
