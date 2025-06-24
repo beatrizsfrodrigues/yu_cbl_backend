@@ -28,6 +28,7 @@ exports.login = async (req, res, next) => {
     const usernameFromEmail = email.split("@")[0].replace(/\s/g, "");
 
     let user = null;
+    let isNewUser = false;
 
     user = await User.findOne({ googleId: googleId });
 
@@ -37,12 +38,14 @@ exports.login = async (req, res, next) => {
         user.username = usernameFromEmail;
         await user.save();
       }
+      isNewUser = false;
     } else {
       user = await User.findOne({ email: email });
 
       if (user) {
         user.googleId = googleId;
         await user.save();
+        isNewUser = false;
       } else {
         user = await User.create({
           username: usernameFromEmail,
@@ -52,6 +55,7 @@ exports.login = async (req, res, next) => {
           role: "user",
           code: Math.random().toString(36).substring(2, 7),
         });
+        isNewUser = true;
       }
     }
 
@@ -65,10 +69,10 @@ exports.login = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Google login successful!",
-      token: token, // <--- SEND THE TOKEN BACK
+      token: token,
       user: userWithoutPassword,
+      isNewUser: isNewUser,
     });
-    // --- END REPLACEMENT ---
   } catch (error) {
     console.error(
       "Error verifying Google ID token or processing login:",

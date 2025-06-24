@@ -102,9 +102,9 @@ exports.getTasks = async (req, res) => {
       .limit(limit)
       .exec();
 
-    console.log(tasks);
     console.log("limit", limit);
     console.log("page", page);
+    console.log("Query:", query);
 
     return res.status(200).json({
       success: true,
@@ -352,6 +352,8 @@ exports.verifyTask = async (req, res) => {
 
       let loggedUser = await User.findOne({ _id: req.user.id }).exec();
 
+      let partner = await User.findOne({ _id: loggedUser.partnerId }).exec();
+
       let task = await Task.findOne({ _id: taskId }).exec();
 
       const chat = await Message.findOne({
@@ -373,8 +375,10 @@ exports.verifyTask = async (req, res) => {
           task.verified = true;
           task.rejectMessage = "";
           notification = "aceite.";
+          partner.points += 10;
 
           await task.save();
+          await partner.save();
         } else if (req.body.verify == false) {
           task.completed = false;
           task.verified = false;
@@ -384,6 +388,7 @@ exports.verifyTask = async (req, res) => {
           notification = `rejeitada. Foi deixada esta mensagem: ${req.body.rejectMessage}`;
 
           await task.save();
+          
         }
 
         chat.messages.push({
