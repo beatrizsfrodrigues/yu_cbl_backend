@@ -1,14 +1,15 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const cookieParser = require("cookie-parser"); // Keep if you use for other non-session cookies
+const cookieParser = require("cookie-parser");
 const meRoute = require("./routes/me");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-// const session = require("express-session"); // <-- REMOVE THIS LINE
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./swagger/swaggerConfig");
 
-const db = require("./models"); // Adjust this path if your 'models' directory is elsewhere
-const User = db.users; // This assumes 'db.users' correctly exposes your Mongoose User model
+const db = require("./models");
+const User = db.users;
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -129,7 +130,8 @@ app.use("/preset-messages", require("./routes/presetMessages.routes.js"));
 app.use("/forms", require("./routes/form.routes.js"));
 app.use("/form-answers", require("./routes/formAnswers.routes.js"));
 
-// 404 fallback
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 app.all("*", (req, res) => {
   res.status(404).json({ message: "Endpoint not found" });
 });
